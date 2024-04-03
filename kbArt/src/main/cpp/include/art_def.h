@@ -113,7 +113,7 @@ struct PartialRuntimeR {
 
 };
 
-//Android 13
+//Android 13~Android14
 struct PartialRuntimeTiramisu {
   void *thread_list_;
 
@@ -128,7 +128,6 @@ struct PartialRuntimeTiramisu {
   void *jni_id_manager_;
 
   void *java_vm_;
-
 };
 
 struct JavaVMExt {
@@ -160,6 +159,10 @@ typedef bool (*Resume_t)(void *thread_list, void *thread, SuspendReason suspendR
 typedef std::string (*PrettyMethod_t)(void *art_method, bool with_signature);
 
 typedef ThreadState (*FetchState_t)(void *thread,/* out */void* monitor_object,/* out */uint32_t* lock_owner_tid);
+
+
+//classLinker
+
 
 
 }

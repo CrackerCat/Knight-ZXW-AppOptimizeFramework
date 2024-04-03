@@ -10,6 +10,7 @@ import com.knightboost.appoptimizeframework.databinding.FragmentMainBinding
 import com.knightboost.appoptimizeframework.gsonopttest.GsonTest
 import com.knightboost.appoptimizeframework.tests.retrofit.BilibiliService
 import com.knightboost.appoptimizeframework.tests.retrofit.HttpService
+import com.knightboost.artvm.Android14DebuggableBugFixer
 import com.knightboost.artvm.ArtThread
 import com.knightboost.artvm.KbArt
 import com.knightboost.kprofiler.KProfiler
@@ -49,6 +50,10 @@ class MainFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+
+        binding.btnAndroidDebugFix.setOnClickListener{
+            Android14DebuggableBugFixer.fix()
+        }
 
         binding.btnDisableClassVerify.setOnClickListener {
             KbArt.nDisableClassVerify()

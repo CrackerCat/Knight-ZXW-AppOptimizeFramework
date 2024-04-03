@@ -24,8 +24,6 @@ JniIdManager *ArtHelper::jniIdManager = nullptr;
 static WalkStack_t walk_stack = nullptr;
 static Resume_t resume = nullptr;
 static PrettyMethod_t pretty_method = nullptr;
-static SuspendThreadByPeer_t suspend_thread_by_peer = nullptr;
-static SuspendThreadByPeer_Q_t suspend_thread_by_peer_Q = nullptr;
 static SuspendThreadByThreadId_t suspend_thread_by_thread_id = nullptr;
 
 
@@ -34,7 +32,8 @@ static void *thread_list = nullptr;
 static int api_level = 0;
 
 static std::mutex mutex;
-
+static std::mutex mtx;
+static bool initialized = false;
 
 
 //static std::map<std::string, int> findSymbolRecordMap;
@@ -72,39 +71,16 @@ int ArtHelper::load_symbols() {
   auto end = std::chrono::steady_clock::now();
   LOGE(TAG,"open xdl cost %lld",std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
-
-  suspend_thread_by_thread_id =
-      reinterpret_cast<SuspendThreadByThreadId_t>(xdl_dsym(handle,
-                                                           "_ZN3art10ThreadList23SuspendThreadByThreadIdEjNS_13SuspendReasonEPb",
-                                                           nullptr));
-  LOGV("ArtHelper", "suspend_thread_by_thread_id is %p", suspend_thread_by_thread_id);
-
-  if (suspend_thread_by_thread_id == nullptr) {
-    return -1;
-  }
-
-  if (api_level > __ANDROID_API_Q__) {
-    suspend_thread_by_peer =
-        reinterpret_cast<SuspendThreadByPeer_t>(xdl_dsym(handle,
-                                                         "_ZN3art10ThreadList19SuspendThreadByPeerEP8_jobjectNS_13SuspendReasonEPb",
-                                                         nullptr));
-    if (suspend_thread_by_peer == nullptr) {
-      //todo handle
-    }
-  } else {
-    suspend_thread_by_peer_Q =
-        reinterpret_cast<SuspendThreadByPeer_Q_t>(xdl_dsym(handle,
-                                                           "_ZN3art10ThreadList19SuspendThreadByPeerEP8_jobjectbNS_13SuspendReasonEPb",
-                                                           nullptr));
-    if (suspend_thread_by_peer_Q == nullptr) {
-      //todo handle
-    }
-  }
-
   xdl_close(handle);
   return 0;
 }
 int ArtHelper::init(JNIEnv *env) {
+  //TODO 保证只初始化一次
+  if (initialized){
+    return 0;
+  }
+
+  std::lock_guard<std::mutex> lock(mtx);
   api_level = getAndroidApiLevel();
   JavaVM *javaVM;
   env->GetJavaVM(&javaVM);
@@ -151,6 +127,7 @@ int ArtHelper::init(JNIEnv *env) {
     return -1;
   }
 
+  initialized = true;
   return 0;
 }
 
@@ -160,14 +137,15 @@ void *ArtHelper::getThreadList() {
   return thread_list;
 }
 
-void *
-ArtHelper::suspendThreadByPeer(jobject peer, SuspendReason suspendReason, bool *timed_out) {
-  return suspend_thread_by_peer(ArtHelper::getThreadList(), peer, suspendReason, timed_out);
-}
-
 void *ArtHelper::SuspendThreadByThreadId(uint32_t threadId,
                                          SuspendReason suspendReason,
                                          bool *timed_out) {
+  if(suspend_thread_by_thread_id == nullptr){
+        suspend_thread_by_thread_id =
+      reinterpret_cast<SuspendThreadByThreadId_t>(xdl_dsym(getArtSoHandle(),
+                                                           "_ZN3art10ThreadList23SuspendThreadByThreadIdEjNS_13SuspendReasonEPb",
+                                                           nullptr));
+  }
   return suspend_thread_by_thread_id(thread_list, threadId, suspendReason, timed_out);
 }
 
@@ -321,9 +299,16 @@ bool ArtHelper::ResumeJit() {
   }
   return false;
 }
+
+
+
 void *ArtHelper::getArtSoHandle() {
   return   xdl_open(artPath,XDL_TRY_FORCE_LOAD);;
 }
+
+
+
+
 
 JniIdManager::JniIdManager(void *runtime, void *instanceRef) : _instanceRef(instanceRef) {
 }

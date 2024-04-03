@@ -14,3 +14,6 @@ void *get_art_handle() {
   }
   return handle;
 }
+void *dsym(const char *symbol) {
+  return xdl_dsym(get_art_handle(),symbol, nullptr);
+}

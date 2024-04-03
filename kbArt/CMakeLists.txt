@@ -10,6 +10,8 @@ cmake_minimum_required(VERSION 3.18.1)
 
 project(kbArt)
 
+set(CMAKE_CXX_STANDARD 17)
+
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
@@ -29,19 +31,24 @@ add_library( # Sets the name of the library.
         src/main/cpp/art/art_xdl.cpp
         src/main/cpp/art/art.cpp
         src/main/cpp/art/art_thread.cpp
+        src/main/cpp/art/class.cpp
+        src/main/cpp/art/class_linker.cpp
         ${SRC_DIR_Sliver}
         # Provides a relative path to your source file(s).
         src/main/cpp/sliver.cpp
         src/main/cpp/art_vm.cpp
         src/main/cpp/art_thread_jni.cpp
         src/main/cpp/art_jni.cpp
+        src/main/cpp/android_14_debuggable_bug_fixer.cpp
         )
 
 target_include_directories(kbArt PUBLIC
         src/main/cpp
         src/main/cpp/art
         src/main/cpp/sliver
-        src/main/cpp/include)
+        src/main/cpp/include
+        src/main/cpp/include/base
+)
 
 
 # Searches for a specified prebuilt library and stores the path as a

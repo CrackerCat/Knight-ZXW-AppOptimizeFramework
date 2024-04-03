@@ -34,9 +34,6 @@ class ArtHelper {
 
   static void StackVisitorWalkStack(StackVisitor *visitor, bool include_transitions);
 
-  //Suspend a thread using a peer.
-  static void *suspendThreadByPeer(jobject peer, SuspendReason reason, bool *timed_out);
-
     // Suspend a thread using its thread id, typically used by lock/monitor inflation. Returns the
     // thread on success else null. The thread id is used to identify the thread to avoid races with
     // the thread terminating. Note that as thread ids are recycled this may not suspend the expected

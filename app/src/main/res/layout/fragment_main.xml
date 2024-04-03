@@ -7,7 +7,12 @@
     android:orientation="vertical"
     tools:context=".MainFragment">
 
-
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_android_debug_fix"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="android 14 debug fix"
+        />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_DisableClassVerify"

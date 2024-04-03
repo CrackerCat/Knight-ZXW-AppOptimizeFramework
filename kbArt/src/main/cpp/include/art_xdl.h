@@ -3,5 +3,6 @@
 //
 
 #pragma once
-
+#include "xdl.h"
 void *get_art_handle();
+void *dsym(const char *symbol);
