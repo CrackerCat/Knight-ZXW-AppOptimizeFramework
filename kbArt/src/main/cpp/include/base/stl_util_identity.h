@@ -3,7 +3,7 @@
 //
 #pragma once
 
-namespace kbArt {
+namespace art {
 
 // Use to suppress type deduction for a function argument.
 // See std::identity<> for more background:

@@ -5,11 +5,11 @@
 #pragma once
 #include <stddef.h>  // for offsetof()
 #include <string.h>  // for memset()
-
+#include "bit_utils.h"
 #include "casts.h"
 #include "stride_iterator.h"
 
-namespace kbArt{
+namespace art{
 
 template<typename T>
 class LengthPrefixedArray {
@@ -87,12 +87,5 @@ class LengthPrefixedArray {
   uint8_t data_[0];
 };
 
-// Returns empty iteration range if the array is null.
-template<typename T>
-IterationRange<StrideIterator<T>> MakeIterationRangeFromLengthPrefixedArray(
-    LengthPrefixedArray<T>* arr, size_t element_size = sizeof(T), size_t alignment = alignof(T)) {
-  return arr != nullptr ?
-         MakeIterationRange(arr->begin(element_size, alignment), arr->end(element_size, alignment)) :
-         MakeEmptyIterationRange(StrideIterator<T>(nullptr, 0));
-}
+
 }

@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "art_thread.h"
 using namespace kbArt;
+using namespace art;
 
 
 extern "C"

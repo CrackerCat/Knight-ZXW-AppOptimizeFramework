@@ -159,8 +159,8 @@ bool ArtHelper::Resume(void *thread, SuspendReason suspendReason) {
   }
   return resume(ArtHelper::getThreadList(), thread, suspendReason);
 }
-
 std::string ArtHelper::PrettyMethod(void *art_method, bool with_signature) {
+
   if (pretty_method == nullptr) {
     void *handle = getArtSoHandle();
     pretty_method = reinterpret_cast<PrettyMethod_t>(xdl_dsym(handle,
@@ -171,7 +171,7 @@ std::string ArtHelper::PrettyMethod(void *art_method, bool with_signature) {
   return pretty_method(art_method, with_signature);
 }
 
-void ArtHelper::StackVisitorWalkStack(StackVisitor *visitor, bool include_transitions) {
+void ArtHelper::StackVisitorWalkStack(art::StackVisitor *visitor, bool include_transitions) {
   if (walk_stack == nullptr) {
     void *handle = getArtSoHandle();
     walk_stack = reinterpret_cast<WalkStack_t>(xdl_dsym(handle,

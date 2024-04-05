@@ -7,7 +7,7 @@
 #include "type_traits"
 // Always inline ObjPtr methods even in debug builds.
 #define OBJPTR_INLINE __attribute__ ((always_inline))
-namespace kbArt{
+namespace art{
 // Value type representing a pointer to a mirror::Object of type MirrorType
 // Since the cookie is thread based, it is not safe to share an ObjPtr between threads.
 template<class MirrorType>

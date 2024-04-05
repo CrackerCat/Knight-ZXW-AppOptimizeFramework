@@ -10,7 +10,7 @@
 #include "macro.h"
 #include "tls.h"
 #include "common.h"
-namespace kbArt {
+namespace art {
 
 typedef uint64_t (*GetCpuMicroTime_t)(void *thread);
 

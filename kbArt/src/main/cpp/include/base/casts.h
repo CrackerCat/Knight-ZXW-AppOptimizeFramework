@@ -12,7 +12,7 @@
 
 #include "stl_util_identity.h"
 
-namespace kbArt {
+namespace art {
 
 // Use implicit_cast as a safe version of static_cast or const_cast
 // for upcasting in the type hierarchy (i.e. casting a pointer to Foo

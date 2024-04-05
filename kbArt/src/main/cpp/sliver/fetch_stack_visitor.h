@@ -6,6 +6,7 @@
 #include "include/stackvisitor.h"
 #include "art_method.h"
 using namespace kbArt;
+using namespace art;
 class FetchStackVisitor : public StackVisitor {
  public:
   FetchStackVisitor(void *thread,

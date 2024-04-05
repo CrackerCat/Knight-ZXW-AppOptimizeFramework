@@ -5,8 +5,7 @@
 
 #include <iterator>
 
-
-namespace kbArt {
+namespace art {
 
 template<typename T>
 class StrideIterator {
@@ -27,7 +26,6 @@ class StrideIterator {
         stride_(stride) {}
 
   bool operator==(const StrideIterator &other) const {
-    DCHECK_EQ(stride_, other.stride_);
     return ptr_ == other.ptr_;
   }
 

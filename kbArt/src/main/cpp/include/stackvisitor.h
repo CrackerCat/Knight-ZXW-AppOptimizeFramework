@@ -6,7 +6,7 @@
 #define KB_STACKVISITOR_H_
 
 #include "shadow_frame.h"
-namespace kbArt {
+namespace art {
 
 const size_t STRUCT_COMPAT = sizeof(size_t) * 200;
 

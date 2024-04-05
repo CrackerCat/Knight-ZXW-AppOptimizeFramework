@@ -5,7 +5,7 @@
 #pragma once
 #include "obj_ptr.h"
 #include "base/bit_utils.h"
-namespace kbArt{
+namespace art{
 template<class MirrorType>
 inline MirrorType* ObjPtr<MirrorType>::operator->() const {
   return Ptr();

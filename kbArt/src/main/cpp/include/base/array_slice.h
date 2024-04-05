@@ -7,7 +7,8 @@
 #include "stride_iterator.h"
 #include "casts.h"
 #include <ostream>
-namespace kbArt{
+#include "stride_iterator.h"
+namespace art{
 // An ArraySlice is an abstraction over an array or a part of an array of a particular type. It does
 // bounds checking and can be made from several common array-like structures in Art.
 template <typename T>
@@ -36,9 +37,8 @@ class ArraySlice {
              size_t length,
              size_t element_size = sizeof(T))
       : array_(array),
-        size_(dchecked_integral_cast<uint32_t>(length)),
+        size_(length),
         element_size_(element_size) {
-    DCHECK(array_ != nullptr || length == 0);
   }
   ArraySlice(const ArraySlice<T>&) = default;
   ArraySlice(ArraySlice<T>&&) noexcept = default;
@@ -74,22 +74,18 @@ class ArraySlice {
   }
 
   reference front() {
-    DCHECK(!empty());
     return (*this)[0];
   }
 
   const_reference front() const {
-    DCHECK(!empty());
     return (*this)[0];
   }
 
   reference back() {
-    DCHECK(!empty());
     return (*this)[size_ - 1u];
   }
 
   const_reference back() const {
-    DCHECK(!empty());
     return (*this)[size_ - 1u];
   }
 
@@ -102,14 +98,10 @@ class ArraySlice {
   }
 
   ArraySlice<T> SubArray(size_type pos, size_type length) {
-    DCHECK_LE(pos, size());
-    DCHECK_LE(length, size() - pos);
     return ArraySlice<T>(&AtUnchecked(pos), length, element_size_);
   }
 
   ArraySlice<const T> SubArray(size_type pos, size_type length) const {
-    DCHECK_LE(pos, size());
-    DCHECK_LE(length, size() - pos);
     return ArraySlice<const T>(&AtUnchecked(pos), length, element_size_);
   }
 
@@ -124,7 +116,6 @@ class ArraySlice {
   }
 
   size_t OffsetOf(const T* element) const {
-    DCHECK(Contains(element));
     // Since it's possible element_size_ != sizeof(T) we cannot just use pointer arithmatic
     uintptr_t base_ptr = reinterpret_cast<uintptr_t>(&AtUnchecked(0));
     uintptr_t obj_ptr = reinterpret_cast<uintptr_t>(element);

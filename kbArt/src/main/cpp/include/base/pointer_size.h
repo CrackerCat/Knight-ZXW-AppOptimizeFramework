@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iosfwd>
-namespace kbArt{
+namespace art{
 
 enum class PointerSize : uint32_t {
   k32 = 4,

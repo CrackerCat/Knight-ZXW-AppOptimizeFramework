@@ -5,7 +5,7 @@
 #include "art_thread.h"
 #include "art_xdl.h"
 
-uint32_t kbArt::Thread::GetThreadId() {
+uint32_t art::Thread::GetThreadId() {
   static uint32_t offset = 0;
   if (offset == 0) {
     int api_level = android_get_device_api_level();
@@ -18,7 +18,7 @@ uint32_t kbArt::Thread::GetThreadId() {
   return *(uint32_t *) ((char *) this + offset);
 }
 
-uint32_t kbArt::Thread::GetTid() {
+uint32_t art::Thread::GetTid() {
   static uint32_t offset = 0;
   if (offset == 0) {
     int api_level = android_get_device_api_level();
@@ -31,12 +31,12 @@ uint32_t kbArt::Thread::GetTid() {
   return *(uint32_t *) ((char *) this + offset);
 }
 
-kbArt::Thread *kbArt::Thread::Current() {
+art::Thread *art::Thread::Current() {
   void *thread = __get_tls()[TLS_SLOT_ART_THREAD_SELF];
   return reinterpret_cast<Thread *>(thread);
 }
 
-uint64_t kbArt::Thread::GetCpuMicroTime() {
+uint64_t art::Thread::GetCpuMicroTime() {
   static GetCpuMicroTime_t get_cpu_micro_time = nullptr;
   if (UNLIKELY( get_cpu_micro_time == nullptr)) {
     get_cpu_micro_time =

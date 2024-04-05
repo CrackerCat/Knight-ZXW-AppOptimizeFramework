@@ -8,7 +8,7 @@
 #include <jni.h>
 #include <memory>
 
-namespace kbArt {
+namespace art {
 
 class LockCountData {
   void *monitors_;

@@ -5,7 +5,7 @@
 #include "class.h"
 #include "obj_ptr.h"
 #include "base/array_slice.h"
-namespace kbArt {
+namespace art {
 void VisitClasses(void *class_linker, void *visitor);
 
 class ClassVisitor {

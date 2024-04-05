@@ -48,6 +48,7 @@ target_include_directories(kbArt PUBLIC
         src/main/cpp/sliver
         src/main/cpp/include
         src/main/cpp/include/base
+        src/main/cpp/include/mirror
 )
 
 

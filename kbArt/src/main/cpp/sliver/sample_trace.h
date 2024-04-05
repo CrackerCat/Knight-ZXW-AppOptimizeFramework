@@ -5,7 +5,7 @@
 
 #pragma once
 #include "include/stackvisitor.h"
-using namespace kbArt;
+using namespace art;
 namespace sliver {
 
 enum TraceAction {

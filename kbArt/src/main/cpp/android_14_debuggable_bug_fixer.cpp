@@ -1,14 +1,25 @@
 #pragma once
+#include "cstddef"
 #include "art.h"
 #include "class_linker.h"
+#include "object.h"
+#include "class.h"
+#include "class-inl.h"
 #include <android/api-level.h>
 #include "logger.h"
-#include "class.h"
 using namespace kbArt;
-class FixClassVisitor :public ClassVisitor{
-  bool operator()(ObjPtr<mirror::Class> klass) override  {
-    klass.reference_;
-    LOGD("visitor","kclass %s", mirror::PrettyClass(reinterpret_cast<void *>(klass.reference_)));
+using namespace art;
+using namespace art::mirror;
+class FixClassVisitor :public art::ClassVisitor{
+  bool operator()(art::ObjPtr<art::mirror::Class> klass) override  {
+    for (auto &m : ((art::mirror::Class*)klass.reference_)->GetMethods(kRuntimePointerSize)){
+      if (m.IsMemorySharedMethod()){
+        LOGE("zxw","is memorySharedMethod is %s <- class %s",m.PrettyMethod(true).c_str(),
+             PrettyClass((void *)klass.reference_).c_str());
+      }
+      m.ClearMemorySharedMethod();
+    }
+
     return true;
   }
 };
