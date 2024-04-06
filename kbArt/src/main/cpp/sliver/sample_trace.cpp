@@ -5,11 +5,11 @@
 
 #include "sample_trace.h"
 #include "vector"
-#include "include/art.h"
+#include "art.h"
 #include "art_method.h"
 #include "art_thread.h"
 
-using namespace kbArt;
+using namespace art;
 using namespace sliver;
 static void GetSample(Thread* thread){
 

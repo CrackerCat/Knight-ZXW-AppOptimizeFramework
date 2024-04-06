@@ -20,6 +20,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 aux_source_directory(src/main/cpp/art SRC_DIR_ART)
+aux_source_directory(src/main/cpp/art/jni JNI_SRC)
+aux_source_directory(src/main/cpp/art/mirror MIRROR_SRC)
+aux_source_directory(src/main/cpp/art/stack STACK_SRC)
 aux_source_directory(src/main/cpp/sliver SRC_DIR_Sliver)
 
 add_library( # Sets the name of the library.
@@ -28,7 +31,9 @@ add_library( # Sets the name of the library.
         # Sets the library as a shared library.
         SHARED
         ${SRC_DIR_ART}
-
+        ${JNI_SRC}
+        ${MIRROR_SRC}
+        ${STACK_SRC}
         ${SRC_DIR_Sliver}
         # Provides a relative path to your source file(s).
         src/main/cpp/sliver.cpp

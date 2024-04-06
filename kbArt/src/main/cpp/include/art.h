@@ -8,14 +8,14 @@
 #include <stdint.h>
 #include <jni.h>
 #include <string>
-#include "stackvisitor.h"
+#include "stack/stackvisitor.h"
 #include "shadow_frame.h"
 #include "common.h"
 #include "art_method.h"
 #include "art_def.h"
-#include "thread_list.h"
 #include "jni/jni_id_manager.h"
-namespace kbArt {
+#include "thread_list.h"
+namespace art {
 
 class ArtHelper {
 
@@ -24,17 +24,11 @@ class ArtHelper {
 
   static void* getArtSoHandle();
 
-  static gc::collector::ThreadList * getThreadList();
-
-  static void StackVisitorWalkStack(StackVisitor *visitor, bool include_transitions);
+  static ThreadList * getThreadList();
 
 
-  static mirror::jni::JniIdManager  *getJniIdManager();
+  static jni::JniIdManager  *getJniIdManager();
 
-
-  static bool SetJdwpAllowed(bool allowed);
-
-  static bool IsJdwpAllow();
 
   static bool SetJavaDebuggable(bool debuggable);
 
@@ -46,14 +40,12 @@ class ArtHelper {
 
   static bool  ResumeJit();
 
-
  private:
-  static int load_symbols();
 
  public:
   static void *runtime;
   static void *partialRuntime;
-  static art::mirror::jni::JniIdManager * jniIdManager;
+  static jni::JniIdManager * jniIdManager;
  private:
   static char* artPath;
 

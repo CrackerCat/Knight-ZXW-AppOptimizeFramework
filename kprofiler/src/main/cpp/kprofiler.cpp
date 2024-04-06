@@ -11,7 +11,6 @@
 #include <iostream>
 #include <thread>
 #include <atomic>
-using namespace kbArt;
 //https://github.com/tiann/epic/blob/master/library/src/main/cpp/epic.cpp
 
 static thread_local std::atomic<int> *counter = nullptr;

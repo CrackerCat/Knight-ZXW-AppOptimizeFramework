@@ -95,9 +95,11 @@ class MainFragment : Fragment() {
         }
 
         binding.jdwpTest.setOnClickListener {
+            var nIsJdwpAllow = KbArt.nIsJdwpAllow()
+            Log.e("art", "nIsJdwpAllow ${nIsJdwpAllow}")
             KbArt.nSetJavaDebuggable(true)
             KbArt.nSetJdwpAllowed(true)
-            val nIsJdwpAllow = KbArt.nIsJdwpAllow()
+             nIsJdwpAllow = KbArt.nIsJdwpAllow()
             Log.e("art", "nIsJdwpAllow ${nIsJdwpAllow}")
             KProfiler.init(context)
 //            KProfiler.testMethodTrace()

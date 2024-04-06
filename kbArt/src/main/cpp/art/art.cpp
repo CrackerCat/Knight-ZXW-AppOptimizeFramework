@@ -4,7 +4,7 @@
 //
 
 #include "art.h"
-#include "stackvisitor.h"
+#include "stack/stackvisitor.h"
 
 #include "logger.h"
 #include <vector>
@@ -18,11 +18,11 @@
 #include "thread_list.h"
 #include "art_xdl.h"
 
-namespace kbArt {
+namespace art {
 void *ArtHelper::runtime = nullptr;
 void *ArtHelper::partialRuntime = nullptr;
 char *ArtHelper::artPath = nullptr;
-art::mirror::jni::JniIdManager *ArtHelper::jniIdManager = nullptr;
+art::jni::JniIdManager *ArtHelper::jniIdManager = nullptr;
 static void *thread_list = nullptr;
 
 static int api_level = 0;
@@ -51,24 +51,7 @@ int findOffset(void *start, int regionStart, int regionEnd, T target) {
   return -1;
 }
 
-/**
- * 获取主要符号
- * @return
- */
-int ArtHelper::load_symbols() {
-  LOGV("ArtHelper", "start load art symbols");
-  artPath = getLibArtPath();
-  auto start = std::chrono::steady_clock::now();
-  void *handle = xdl_open(artPath,
-                          XDL_TRY_FORCE_LOAD);
-  auto end = std::chrono::steady_clock::now();
-  LOGE(TAG,
-       "open xdl cost %lld",
-       std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
-  xdl_close(handle);
-  return 0;
-}
 int ArtHelper::init(JNIEnv *env) {
   //TODO 保证只初始化一次
   if (initialized) {
@@ -83,12 +66,6 @@ int ArtHelper::init(JNIEnv *env) {
   auto *javaVMExt = reinterpret_cast<JavaVMExt *>(javaVM);
   runtime = javaVMExt->runtime;
   const int MAX = 2000;
-
-  int loadSymbolResult = load_symbols();
-  if (loadSymbolResult == -1) {
-    LOGE("ArtHelper", "loadSymbol failed");
-    return -1;
-  }
 
   int offsetOfVmExt = findOffset(runtime, 0, MAX, javaVMExt);
   if (offsetOfVmExt < 0) {
@@ -126,11 +103,11 @@ int ArtHelper::init(JNIEnv *env) {
   return 0;
 }
 
-gc::collector::ThreadList *ArtHelper::getThreadList() {
-  return static_cast<gc::collector::ThreadList *>(thread_list);
+ThreadList *ArtHelper::getThreadList() {
+  return static_cast<ThreadList *>(thread_list);
 }
 
-mirror::jni::JniIdManager  *ArtHelper::getJniIdManager() {
+jni::JniIdManager  *ArtHelper::getJniIdManager() {
   if (api_level < ANDROID_API_TIRAMISU) {
     return nullptr;
   }
@@ -141,43 +118,17 @@ mirror::jni::JniIdManager  *ArtHelper::getJniIdManager() {
           static_cast<void *>(
               (reinterpret_cast<PartialRuntimeTiramisu *>(ArtHelper::partialRuntime))->jni_id_manager_);
     } else if (api_level >= ANDROID_API_R) {
-      address = static_cast<art::mirror::jni::JniIdManager *>(
+      address = static_cast<art::jni::JniIdManager *>(
           (reinterpret_cast<PartialRuntimeR *>(ArtHelper::partialRuntime))->jni_id_manager_);
     }
     if (address != nullptr) {
-      jniIdManager = static_cast<art::mirror::jni::JniIdManager *>(address);
+      jniIdManager = static_cast<art::jni::JniIdManager *>(address);
     }
   }
-  return static_cast<mirror::jni::JniIdManager *>(jniIdManager);
+  return static_cast<jni::JniIdManager *>(jniIdManager);
 }
 
-void ArtHelper::StackVisitorWalkStack(art::StackVisitor *visitor, bool include_transitions) {
-  static void (*walk)(art::StackVisitor *, bool) = nullptr;
-  if (walk == nullptr) {
-    walk = reinterpret_cast<void (*)(art::StackVisitor *,
-                                     bool)>(dsym(
-        "_ZN3art12StackVisitor9WalkStackILNS0_16CountTransitionsE0EEEvb"));
-  }
-  walk(visitor, include_transitions);
-}
 
-bool ArtHelper::SetJdwpAllowed(bool allowed) {
-  static void (*setJdwpAllowed)(bool) = nullptr;
-  if (setJdwpAllowed == nullptr) {
-    void *handle = getArtSoHandle();
-
-    setJdwpAllowed = reinterpret_cast<void (*)(bool)>(xdl_dsym(handle,
-                                                               "_ZN3art3Dbg14SetJdwpAllowedEb",
-                                                               nullptr));
-    xdl_close(handle);
-  }
-  if (setJdwpAllowed != nullptr) {
-    setJdwpAllowed(allowed);
-    return true;
-  } else {
-    return false;
-  }
-}
 
 bool ArtHelper::SetJavaDebuggable(bool debuggable) {
 
@@ -195,16 +146,7 @@ bool ArtHelper::SetJavaDebuggable(bool debuggable) {
   }
   return false;
 }
-bool ArtHelper::IsJdwpAllow() {
-  static bool (*isJdwpAllow)() = nullptr;
-  if (isJdwpAllow == nullptr) {
-    void *handle = getArtSoHandle();
-    isJdwpAllow =
-        reinterpret_cast<bool (*)()>(xdl_dsym(handle, "_ZN3art3Dbg13IsJdwpAllowedEv", nullptr));
-    xdl_close(handle);
-  }
-  return isJdwpAllow();
-}
+
 
 bool ArtHelper::DisableClassVerify() {
   //_ZN3art7Runtime15DisableVerifierEv

@@ -8,7 +8,6 @@
 #include <android/api-level.h>
 #include "logger.h"
 #include "thread_list.h"
-using namespace kbArt;
 using namespace art;
 using namespace art::mirror;
 class FixClassVisitor :public art::ClassVisitor{

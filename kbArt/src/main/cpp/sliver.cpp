@@ -1,12 +1,12 @@
 #include <jni.h>
-#include "include/art.h"
+#include "art.h"
 #include "sliver/fetch_stack_visitor.h"
 #include "vector"
 #include <chrono>
 #include "logger.h"
 #include "logger.h"
 #include "art_thread.h"
-using namespace kbArt;
+#include "suspend_reason.h"
 using namespace art;
 
 
@@ -43,7 +43,8 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
   FetchStackVisitor visitor(thread,
                             &stack_methods,
                             f);
-  ArtHelper::StackVisitorWalkStack(&visitor, false);
+  visitor.WalkStack(false);
+//  ArtHelper::StackVisitorWalkStack(&visitor, false);
 
   if (!isSameThread){
     ArtHelper::getThreadList()->Resume(thread, art::SuspendReason::kForUserCode);

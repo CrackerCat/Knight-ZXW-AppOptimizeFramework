@@ -6,6 +6,7 @@
 #define KB_STACKVISITOR_H_
 
 #include "shadow_frame.h"
+#include "art_xdl.h"
 namespace art {
 
 const size_t STRUCT_COMPAT = sizeof(size_t) * 200;
@@ -38,6 +39,16 @@ class StackVisitor {
   //https://cs.android.com/android/platform/superproject/+/master:art/runtime/stack.h
   char param[STRUCT_COMPAT] = {};
  public:
+  void WalkStack(bool include_transitions = false){
+    static void (*walk)(art::StackVisitor *, bool) = nullptr;
+    if (walk == nullptr) {
+      walk = reinterpret_cast<void (*)(art::StackVisitor *,
+                                       bool)>(dsym(
+          "_ZN3art12StackVisitor9WalkStackILNS0_16CountTransitionsE0EEEvb"));
+    }
+    walk(this, include_transitions);
+  };
+
   inline void *GetMethod() {
     if (cur_shadow_frame_ != nullptr) {
       return cur_shadow_frame_->method;

@@ -3,9 +3,8 @@
 // Email: nimdanoob@163.com
 //
 #pragma once
-#include "include/stackvisitor.h"
+#include "stack/stackvisitor.h"
 #include "art_method.h"
-using namespace kbArt;
 using namespace art;
 class FetchStackVisitor : public StackVisitor {
  public:

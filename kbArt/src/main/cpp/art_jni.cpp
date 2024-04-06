@@ -1,28 +1,32 @@
 #include <jni.h>
-#include "include/art.h"
-
+#include "art.h"
+#include "debugger.h"
 //
 // Created by Knight-ZXW on 2023/6/8.
 //
 
 extern "C"
 
-using namespace kbArt;
+using namespace art;
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_knightboost_artvm_KbArt_nSetJdwpAllowed(JNIEnv *env, jclass clazz, jboolean allowed) {
-  return ArtHelper::SetJdwpAllowed(allowed);
+  art::Dbg::Dbg::SetJdwpAllowed(allowed);
+  return true;
 }
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_com_knightboost_artvm_KbArt_nSetJavaDebuggable(JNIEnv *env, jclass clazz, jboolean debuggable) {
-  return ArtHelper::SetJavaDebuggable(debuggable);
+Java_com_knightboost_artvm_KbArt_nSetJavaDebuggable(JNIEnv *env,
+                                                    jclass clazz,
+                                                    jboolean debuggable) {
+  ArtHelper::SetJavaDebuggable(debuggable);
+  return true;
 }
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_com_knightboost_artvm_KbArt_nIsJdwpAllow(JNIEnv *env, jclass clazz) {
-  return ArtHelper::IsJdwpAllow();
+  return art::Dbg::Dbg::IsJdwpAllowed();
 }
 extern "C"
 JNIEXPORT jboolean JNICALL

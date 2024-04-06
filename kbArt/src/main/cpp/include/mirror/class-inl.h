@@ -43,5 +43,6 @@ inline ArraySlice<ArtMethod> Class::GetMethodsSliceRangeUnchecked(
   return slice.SubArray(start_offset, size);
 }
 
+
 }
 }

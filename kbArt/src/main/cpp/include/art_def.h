@@ -3,7 +3,10 @@
 //
 
 #pragma once
-namespace kbArt {
+#include "stdlib.h"
+#include "stdint.h"
+#include "string"
+namespace art {
 
 #define ANDROID_API_M 23 // Android 6.0
 #define ANDROID_API_N 24 // Android 7.0
