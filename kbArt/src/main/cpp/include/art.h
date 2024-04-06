@@ -13,15 +13,9 @@
 #include "common.h"
 #include "art_method.h"
 #include "art_def.h"
+#include "thread_list.h"
+#include "jni/jni_id_manager.h"
 namespace kbArt {
-
-class JniIdManager {
- public:
-   JniIdManager(void *runtime,void *instanceRef);
-   void * DecodeMethodId(jmethodID methodId);
- private:
-   void *_instanceRef;
-};
 
 class ArtHelper {
 
@@ -30,21 +24,13 @@ class ArtHelper {
 
   static void* getArtSoHandle();
 
-  static void *getThreadList();
+  static gc::collector::ThreadList * getThreadList();
 
   static void StackVisitorWalkStack(StackVisitor *visitor, bool include_transitions);
 
-    // Suspend a thread using its thread id, typically used by lock/monitor inflation. Returns the
-    // thread on success else null. The thread id is used to identify the thread to avoid races with
-    // the thread terminating. Note that as thread ids are recycled this may not suspend the expected
-    // thread, that may be terminating. If the suspension times out then *timeout is set to true.
-  static void *SuspendThreadByThreadId(uint32_t threadId,
-                                       SuspendReason suspendReason,
-                                       bool *timed_out);
 
-  static JniIdManager *getJniIdManager();
+  static mirror::jni::JniIdManager  *getJniIdManager();
 
-  static bool Resume(void *thread, SuspendReason suspendReason);
 
   static bool SetJdwpAllowed(bool allowed);
 
@@ -60,7 +46,6 @@ class ArtHelper {
 
   static bool  ResumeJit();
 
-  static std::string PrettyMethod(void *art_method, bool with_signature);
 
  private:
   static int load_symbols();
@@ -68,7 +53,7 @@ class ArtHelper {
  public:
   static void *runtime;
   static void *partialRuntime;
-  static JniIdManager* jniIdManager;
+  static art::mirror::jni::JniIdManager * jniIdManager;
  private:
   static char* artPath;
 

@@ -7,6 +7,7 @@
 #include "class-inl.h"
 #include <android/api-level.h>
 #include "logger.h"
+#include "thread_list.h"
 using namespace kbArt;
 using namespace art;
 using namespace art::mirror;
@@ -15,9 +16,9 @@ class FixClassVisitor :public art::ClassVisitor{
     for (auto &m : ((art::mirror::Class*)klass.reference_)->GetMethods(kRuntimePointerSize)){
       if (m.IsMemorySharedMethod()){
         LOGE("zxw","is memorySharedMethod is %s <- class %s",m.PrettyMethod(true).c_str(),
-             PrettyClass((void *)klass.reference_).c_str());
+             art::mirror::Class::PrettyClass( (void *)klass.reference_).c_str());
+        m.ClearMemorySharedMethod();
       }
-      m.ClearMemorySharedMethod();
     }
 
     return true;
@@ -27,7 +28,6 @@ class FixClassVisitor :public art::ClassVisitor{
 void fix(){
   auto api_level = android_get_device_api_level();
   if (api_level == 34){
-    LOGE("zxw","是Android 34");
     FixClassVisitor visitor;
     void *class_linker = reinterpret_cast<PartialRuntimeTiramisu *>(ArtHelper::partialRuntime)->class_linker_;
     VisitClasses(class_linker,&visitor);

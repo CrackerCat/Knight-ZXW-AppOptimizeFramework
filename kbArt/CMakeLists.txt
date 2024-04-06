@@ -27,12 +27,8 @@ add_library( # Sets the name of the library.
 
         # Sets the library as a shared library.
         SHARED
-#        ${SRC_DIR_ART}
-        src/main/cpp/art/art_xdl.cpp
-        src/main/cpp/art/art.cpp
-        src/main/cpp/art/art_thread.cpp
-        src/main/cpp/art/class.cpp
-        src/main/cpp/art/class_linker.cpp
+        ${SRC_DIR_ART}
+
         ${SRC_DIR_Sliver}
         # Provides a relative path to your source file(s).
         src/main/cpp/sliver.cpp
@@ -48,6 +44,7 @@ target_include_directories(kbArt PUBLIC
         src/main/cpp/sliver
         src/main/cpp/include
         src/main/cpp/include/base
+        src/main/cpp/include/jni
         src/main/cpp/include/mirror
 )
 

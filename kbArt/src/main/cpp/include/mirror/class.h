@@ -100,8 +100,12 @@ class  MANAGED Class final :public Object{
 
   ALWAYS_INLINE uint32_t NumMethods();
   static ALWAYS_INLINE uint32_t NumMethods(LengthPrefixedArray<ArtMethod>* methods);
+
+  static std::string PrettyClass(void* clazz){
+    auto Pretty = (std::string (*)(void *)) dsym("_ZN3art6mirror5Class11PrettyClassEv");
+    return Pretty(clazz);
+  };
 };
-std::string PrettyClass(void *clazz);
 }
 
 }

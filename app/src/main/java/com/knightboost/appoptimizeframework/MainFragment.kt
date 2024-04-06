@@ -19,6 +19,7 @@ import com.knightboost.messageobserver.MessageObserver
 import com.knightboost.messageobserver.MessageObserverManager
 import com.knightboost.optimize.cpuboost.*
 import com.knightboost.optimize.looperopt.LooperMsgOptimizeManager
+import com.knightboost.sliver.Sliver
 import kotlin.concurrent.thread
 
 /**
@@ -70,8 +71,11 @@ class MainFragment : Fragment() {
         binding.btnTestGetThreadCpuTime.setOnClickListener {
 
             val nativePeer = ArtThread.getNativePeer(Looper.getMainLooper().thread)
+            val frames = Sliver.nativeGetMethodStackTrace(nativePeer);
+            val prettyMethods = Sliver.prettyMethods(frames)
+            Log.e("zxw","methods is "+prettyMethods)
 
-           val mainThreadCpuMicroTime = ArtThread.getCpuMicroTime(nativePeer)
+            val mainThreadCpuMicroTime = ArtThread.getCpuMicroTime(nativePeer)
             Log.d("zxw","主线程CpuMicroTime "+mainThreadCpuMicroTime)
 
 

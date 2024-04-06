@@ -14,7 +14,6 @@ extern "C"
 JNIEXPORT jlongArray JNICALL
 Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
                                                              jclass clazz,
-                                                             jobject threadPeer,
                                                              jlong native_peer) {
 
   auto* thread = reinterpret_cast<Thread *>(native_peer);
@@ -28,9 +27,9 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
     isSameThread = true;
   }
   if (!isSameThread){
-    ArtHelper::SuspendThreadByThreadId(thread->GetThreadId(),
-                                       SuspendReason::kForUserCode,
-                                       &timeOut);
+    ArtHelper::getThreadList()->SuspendThreadByThreadId(thread->GetThreadId(),
+                                                        art::SuspendReason::kForUserCode,
+                                                        &timeOut);
   }
 
   
@@ -47,7 +46,7 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
   ArtHelper::StackVisitorWalkStack(&visitor, false);
 
   if (!isSameThread){
-    ArtHelper::Resume(thread, SuspendReason::kForUserCode);
+    ArtHelper::getThreadList()->Resume(thread, art::SuspendReason::kForUserCode);
   }
 
   std::vector<double> results(4);
@@ -75,7 +74,7 @@ Java_com_knightboost_sliver_Sliver_prettyMethods(JNIEnv *env, jclass clazz, jlon
 
   for (int i = 0; i < size; i++) {
     const std::string
-        &pretty_method = ArtHelper::PrettyMethod(reinterpret_cast<void *>(methods_ptr[i]), true);
+        &pretty_method = reinterpret_cast<ArtMethod *>(methods_ptr[i])->PrettyMethod(true);
     pretty_method.c_str();
     jstring frame = env->NewStringUTF(pretty_method.c_str());
     env->SetObjectArrayElement(ret, i, frame);

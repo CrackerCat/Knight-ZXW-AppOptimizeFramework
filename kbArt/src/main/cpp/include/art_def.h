@@ -17,13 +17,6 @@ namespace kbArt {
 #define ANDROID_API_S_V2 32 // Android 12
 #define ANDROID_API_TIRAMISU 33
 
-enum class SuspendReason : char {
-  // Suspending for internal reasons (e.g. GC, stack trace, etc.).
-  kInternal,
-  // Suspending due to non-runtime, user controlled, code. (For example Thread#Suspend()).
-  kForUserCode,
-};
-
 enum class ThreadState : uint8_t {
   // `kRunnable` was previously 67 but it is now set to 0 so that we do not need to extract
   // flags from the thread's `state_and_flags` to check for any flag being set while Runnable.
@@ -135,30 +128,6 @@ struct JavaVMExt {
   void *runtime;
 };
 
-
-
-
-
-
-typedef void (*WalkStack_t)(StackVisitor *stack_visitor, bool include_transitions);
-
-typedef void *(*SuspendThreadByPeer_t)(void *thread_list, jobject peer, SuspendReason suspendReason,
-                                       bool *timed_out);
-
-typedef void *(*SuspendThreadByPeer_Q_t)(void *thread_list, jobject peer,bool request_suspension,SuspendReason suspendReason,
-                                         bool *timed_out);
-
-//_ZN3art10ThreadList23SuspendThreadByThreadIdEjNS_13SuspendReasonEPb
-typedef void *(*SuspendThreadByThreadId_t)(void *thread_list,
-                                           uint32_t thread_id,
-                                           SuspendReason suspendReason,
-                                           bool *time_out);
-
-typedef bool (*Resume_t)(void *thread_list, void *thread, SuspendReason suspendReason);
-
-typedef std::string (*PrettyMethod_t)(void *art_method, bool with_signature);
-
-typedef ThreadState (*FetchState_t)(void *thread,/* out */void* monitor_object,/* out */uint32_t* lock_owner_tid);
 
 
 //classLinker

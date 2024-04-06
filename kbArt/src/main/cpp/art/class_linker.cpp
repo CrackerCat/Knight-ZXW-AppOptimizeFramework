@@ -1,4 +1,3 @@
-#pragma once
 #include "class_linker.h"
 #include "art_xdl.h"
 #include "xdl.h"

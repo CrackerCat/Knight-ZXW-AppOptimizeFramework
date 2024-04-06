@@ -2,9 +2,11 @@
 #include "logger.h"
 #include "string"
 #include "jvmagent/jvmti_helper.h"
+#include "art_method.h"
+#include "art_thread.h"
+#include "jni/jni_id_manager.h"
 #include "jvmti.h"
 #include "art.h"
-#include "art_thread.h"
 #include "atrace/trace/trace.h"
 #include <iostream>
 #include <thread>
@@ -31,10 +33,11 @@ static void profilerJvmtiEventMethodEntry
   if (cc >10){
     return;
   }
-  void *artMethod = ArtHelper::getJniIdManager()->DecodeMethodId(method);
-  const std::string
-      &pretty_method = kbArt::ArtHelper::PrettyMethod(artMethod, true);
-  LOGE("KProfiler", "%d >>> (%d) %s",tid,cc, pretty_method.c_str());
+
+//  ArtMethod *artMethod = ArtHelper::getJniIdManager()->DecodeMethodId(method);
+//  const std::string
+//      &pretty_method = artMethod->PrettyMethod(true);
+//  LOGE("KProfiler", "%d >>> (%d) %s",tid,cc, pretty_method.c_str());
 
 //  static jmethodID getNameMethodId;
 //  char *name;
@@ -71,12 +74,12 @@ static void profilerJvmtiEventMethodExit
     return;
   }
 
-  void *artMethod = ArtHelper::getJniIdManager()->DecodeMethodId(method);
-  const std::string
-      &pretty_method = kbArt::ArtHelper::PrettyMethod(artMethod, true);
-
-  LOGE("KProfiler", "%d <<< (%d) %s",tid, cc,pretty_method.c_str());
-  cc =cc-1;
+//  ArtMethod *artMethod = ArtHelper::getJniIdManager()->DecodeMethodId(method);
+//  const std::string
+//      &pretty_method = artMethod->PrettyMethod(true);
+//
+//  LOGE("KProfiler", "%d <<< (%d) %s",tid, cc,pretty_method.c_str());
+//  cc =cc-1;
 
 }
 
