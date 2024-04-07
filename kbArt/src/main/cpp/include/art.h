@@ -22,33 +22,28 @@ class ArtHelper {
  public:
   static int init(JNIEnv *env);
 
-  static void* getArtSoHandle();
+  static ThreadList *getThreadList();
 
-  static ThreadList * getThreadList();
-
-
-  static jni::JniIdManager  *getJniIdManager();
-
+  static jni::JniIdManager *getJniIdManager();
 
   static bool SetJavaDebuggable(bool debuggable);
 
   static bool DisableClassVerify();
 
-  static bool  EnableClassVerify();
+  static bool EnableClassVerify();
 
-  static bool  DelayJit();
+  static bool DelayJit();
 
-  static bool  ResumeJit();
+  static bool ResumeJit();
 
  private:
 
  public:
   static void *runtime;
   static void *partialRuntime;
-  static jni::JniIdManager * jniIdManager;
+  static jni::JniIdManager *jniIdManager;
  private:
-  static char* artPath;
-
+  static char *artPath;
 
 };
 }

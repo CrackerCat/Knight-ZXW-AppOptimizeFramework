@@ -131,14 +131,9 @@ jni::JniIdManager  *ArtHelper::getJniIdManager() {
 
 
 bool ArtHelper::SetJavaDebuggable(bool debuggable) {
-
   static void (*setJavaDebuggable)(void *, bool) = nullptr;
   if (setJavaDebuggable == nullptr) {
-    void *handle = getArtSoHandle();
-    setJavaDebuggable = reinterpret_cast<void (*)(void *, bool)>(xdl_dsym(handle,
-                                                                          "_ZN3art7Runtime17SetJavaDebuggableEb",
-                                                                          nullptr));
-    xdl_close(handle);
+    setJavaDebuggable = reinterpret_cast<void (*)(void *, bool)>(dsym("_ZN3art7Runtime17SetJavaDebuggableEb"));
   }
   if (setJavaDebuggable != nullptr) {
     setJavaDebuggable(runtime, debuggable);
@@ -149,16 +144,10 @@ bool ArtHelper::SetJavaDebuggable(bool debuggable) {
 
 
 bool ArtHelper::DisableClassVerify() {
-  //_ZN3art7Runtime15DisableVerifierEv
   static void (*DisableVerifierEv)(void *) = nullptr;
   if (DisableVerifierEv == nullptr) {
-    void *handle = getArtSoHandle();
-    DisableVerifierEv = reinterpret_cast<void (*)(void *)>(xdl_dsym(handle,
-                                                                    "_ZN3art7Runtime15DisableVerifierEv",
-                                                                    nullptr));
-    xdl_close(handle);
+    DisableVerifierEv = reinterpret_cast<void (*)(void *)>(dsym("_ZN3art7Runtime15DisableVerifierEv"));
   }
-  LOGE(TAG, "fun is %p", DisableVerifierEv);
   if (DisableVerifierEv != nullptr) {
     DisableVerifierEv(ArtHelper::runtime);
     return true;
@@ -185,10 +174,8 @@ bool ArtHelper::DelayJit() {
                                      (void *) delayJitFunc,
                                      (void **) &originJit);
   if (jitStub != nullptr) {
-    LOGI(TAG, "hook to delay Jit success");
     return true;
   } else {
-    LOGE(TAG, "hook to delay Jit failed");
     return false;
   }
 }
@@ -198,10 +185,6 @@ bool ArtHelper::ResumeJit() {
     return true;
   }
   return false;
-}
-
-void *ArtHelper::getArtSoHandle() {
-  return xdl_open(artPath, XDL_TRY_FORCE_LOAD);;
 }
 
 }
