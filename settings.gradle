@@ -4,11 +4,7 @@ include ':optimize-framework'
 include ':message-observer'
 include ':android-framework'
 include ':looper-free'
-include ':kprofiler'
-//include ':plugin-gsonopt'
 include ':kbArt'
 include ':optimize-other'
 include ':optimize-looper'
-//include ':atrace-server'
-//project(':atrace-server').projectDir = new File('./atrace/atrace-server')
-//include ':atrace-processor'
+

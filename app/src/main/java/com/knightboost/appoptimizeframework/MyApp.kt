@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.util.Log
-//import com.bytedance.rheatrace.core.TraceApplicationLike
 import com.bytedance.shadowhook.ShadowHook
 import com.knightboost.appoptimizeframework.tests.retrofit.BilibiliService
 import com.knightboost.appoptimizeframework.tests.retrofit.HttpService
@@ -19,7 +18,6 @@ class MyApp : Application() {
     @SuppressLint("BinaryOperationInTimber")
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
-//        TraceApplicationLike.attachBaseContext(base)
         try {
 
         }catch (e:java.lang.Exception){
@@ -30,12 +28,6 @@ class MyApp : Application() {
                 .setMode(ShadowHook.Mode.UNIQUE)
                 .build()
         )
-//        val dir = File(base.externalCacheDir,"trace")
-//        dir.mkdirs()
-//        RheaATrace.start(baseContext,
-//        dir)
-
-
 
         //hidden api exemption 是必要的
         Timber.plant(Timber.DebugTree())

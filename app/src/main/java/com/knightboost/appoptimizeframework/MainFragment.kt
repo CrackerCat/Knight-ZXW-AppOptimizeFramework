@@ -13,10 +13,6 @@ import com.knightboost.appoptimizeframework.tests.retrofit.HttpService
 import com.knightboost.artvm.Android14DebuggableBugFixer
 import com.knightboost.artvm.ArtThread
 import com.knightboost.artvm.KbArt
-import com.knightboost.kprofiler.KProfiler
-import com.knightboost.kprofiler.atrace.RheaATrace
-import com.knightboost.messageobserver.MessageObserver
-import com.knightboost.messageobserver.MessageObserverManager
 import com.knightboost.optimize.cpuboost.*
 import com.knightboost.optimize.looperopt.LooperMsgOptimizeManager
 import com.knightboost.sliver.Sliver
@@ -101,8 +97,6 @@ class MainFragment : Fragment() {
             KbArt.nSetJdwpAllowed(true)
              nIsJdwpAllow = KbArt.nIsJdwpAllow()
             Log.e("art", "nIsJdwpAllow ${nIsJdwpAllow}")
-            KProfiler.init(context)
-//            KProfiler.testMethodTrace()
         }
     }
 
