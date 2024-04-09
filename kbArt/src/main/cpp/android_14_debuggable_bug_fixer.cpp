@@ -1,4 +1,6 @@
 #pragma once
+#include <chrono>
+
 #include "cstddef"
 #include "art.h"
 #include "class_linker.h"
@@ -14,12 +16,9 @@ class FixClassVisitor :public art::ClassVisitor{
   bool operator()(art::ObjPtr<art::mirror::Class> klass) override  {
     for (auto &m : ((art::mirror::Class*)klass.reference_)->GetMethods(kRuntimePointerSize)){
       if (m.IsMemorySharedMethod()){
-        LOGE("zxw","is memorySharedMethod is %s <- class %s",m.PrettyMethod(true).c_str(),
-             art::mirror::Class::PrettyClass( (void *)klass.reference_).c_str());
         m.ClearMemorySharedMethod();
       }
     }
-
     return true;
   }
 };
@@ -27,9 +26,13 @@ class FixClassVisitor :public art::ClassVisitor{
 void fix(){
   auto api_level = android_get_device_api_level();
   if (api_level == 34){
+    auto start = std::chrono::steady_clock::now();
     FixClassVisitor visitor;
     void *class_linker = reinterpret_cast<PartialRuntimeTiramisu *>(ArtHelper::partialRuntime)->class_linker_;
     VisitClasses(class_linker,&visitor);
+    auto end = std::chrono::steady_clock::now();
+    LOGI("Android14BugFixer","clear memory shared methods cost %lld us",
+         std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
   }
 }
 extern "C"
