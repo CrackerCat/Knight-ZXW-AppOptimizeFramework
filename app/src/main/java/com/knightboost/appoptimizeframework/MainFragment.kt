@@ -67,12 +67,14 @@ class MainFragment : Fragment() {
         binding.btnTestGetThreadCpuTime.setOnClickListener {
 
             val nativePeer = ArtThread.getNativePeer(Looper.getMainLooper().thread)
-            val frames = Sliver.nativeGetMethodStackTrace(nativePeer);
-            val prettyMethods = Sliver.prettyMethods(frames)
-            Log.e("zxw","methods is "+prettyMethods)
+
 
             val mainThreadCpuMicroTime = ArtThread.getCpuMicroTime(nativePeer)
             Log.d("zxw","主线程CpuMicroTime "+mainThreadCpuMicroTime)
+
+            val frames = Sliver.nativeGetMethodStackTrace(nativePeer);
+            val prettyMethods = Sliver.prettyMethods(frames)
+            Log.e("zxw","methods is "+prettyMethods)
 
 
         }

@@ -8,17 +8,27 @@
 #include "string"
 namespace art {
 
-#define ANDROID_API_M 23 // Android 6.0
-#define ANDROID_API_N 24 // Android 7.0
-#define ANDROID_API_N_MR1 25 // Android 7.1
-#define ANDROID_API_O 26 // Android 8.1
-#define ANDROID_API_O_MR1 27 // Android 8.1
-#define ANDROID_API_P 28 // Android 9
-#define ANDROID_API_Q 29 // Android 10
-#define ANDROID_API_R 30 // Android 11
-#define ANDROID_API_S 31 // Android 12
-#define ANDROID_API_S_V2 32 // Android 12
-#define ANDROID_API_TIRAMISU 33
+#define ANDROID_ICE_CREAM_SANDWICH      14
+#define ANDROID_ICE_CREAM_SANDWICH_MR1  15
+#define ANDROID_JELLY_BEAN              16
+#define ANDROID_JELLY_BEAN_MR1          17
+#define ANDROID_JELLY_BEAN_MR2          18
+#define ANDROID_KITKAT                  19
+#define ANDROID_KITKAT_WATCH            20
+#define ANDROID_LOLLIPOP                21
+#define ANDROID_LOLLIPOP_MR1            22
+#define ANDROID_M                       23
+#define ANDROID_N                       24
+#define ANDROID_N_MR1                   25
+#define ANDROID_O                       26
+#define ANDROID_O_MR1                   27
+#define ANDROID_P                       28
+#define ANDROID_Q                       29
+#define ANDROID_R                       30
+#define ANDROID_S                       31
+#define ANDROID_S_V2                    32
+#define ANDROID_TIRAMISU                33
+#define ANDROID_UPSIDE_DOWN_CAKE        34
 
 enum class ThreadState : uint8_t {
   // `kRunnable` was previously 67 but it is now set to 0 so that we do not need to extract

@@ -2,9 +2,9 @@
 // Created by Administrator on 2024/4/24.
 //
 #include "art_method.h"
+#include "cxx_helper.h"
 uint32_t ArtMethod::GetAccessFlags() const  {
-  return access_flags_.load(std::memory_order_relaxed);
-  return 0;
+  return MemberOf<uint32_t>(art_method_ptr_, offset_->access_flags_offset_);
 }
 bool ArtMethod::IsMemorySharedMethod() {
   return IsMemorySharedMethod(GetAccessFlags());
@@ -39,8 +39,9 @@ std::string ArtMethod::PrettyMethod(bool withSignature) {
   return _PrettyMethod(this, withSignature);
 
 }
-constexpr size_t ArtMethod::PtrSizedFieldsOffset(PointerSize pointer_size) {
-  // Round up to pointer size for padding field. Tested in art_method.cc.
-  return RoundUp(offsetof(ArtMethod, hotness_count_) + sizeof(hotness_count_),
-                 static_cast<size_t>(pointer_size));
-}
+//constexpr size_t ArtMethod::PtrSizedFieldsOffset(PointerSize pointer_size) {
+//  // Round up to pointer size for padding field. Tested in art_method.cc.
+//  return RoundUp(offsetof(ArtMethod, hotness_count_) + sizeof(hotness_count_),
+//                 static_cast<size_t>(pointer_size));
+//}
+

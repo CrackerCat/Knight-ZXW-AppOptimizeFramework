@@ -1,5 +1,5 @@
 #include <jni.h>
-#include "art.h"
+#include "art_runtime.h"
 #include "debugger.h"
 //
 // Created by Knight-ZXW on 2023/6/8.
@@ -20,7 +20,7 @@ JNIEXPORT jboolean JNICALL
 Java_com_knightboost_artvm_KbArt_nSetJavaDebuggable(JNIEnv *env,
                                                     jclass clazz,
                                                     jboolean debuggable) {
-  ArtHelper::SetJavaDebuggable(debuggable);
+  ArtRuntime::Get()->SetJavaDebuggable(debuggable);
   return true;
 }
 extern "C"
@@ -31,17 +31,17 @@ Java_com_knightboost_artvm_KbArt_nIsJdwpAllow(JNIEnv *env, jclass clazz) {
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_com_knightboost_artvm_KbArt_nDisableClassVerify(JNIEnv *env, jclass clazz) {
-  return ArtHelper::DisableClassVerify();
+  return ArtRuntime::Get()->DisableClassVerify();
 }
 
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_com_knightboost_artvm_KbArt_nDelayJit(JNIEnv *env, jclass clazz) {
-  return ArtHelper::DelayJit();
+  return ArtRuntime::Get()->DelayJit();
 }
 
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_com_knightboost_artvm_KbArt_nResumeJit(JNIEnv *env, jclass clazz) {
-  return ArtHelper::ResumeJit();
+  return ArtRuntime::Get()->ResumeJit();
 }

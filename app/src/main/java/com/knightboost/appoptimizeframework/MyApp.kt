@@ -3,6 +3,7 @@ package com.knightboost.appoptimizeframework
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import com.bytedance.shadowhook.ShadowHook
 import com.knightboost.appoptimizeframework.tests.retrofit.BilibiliService

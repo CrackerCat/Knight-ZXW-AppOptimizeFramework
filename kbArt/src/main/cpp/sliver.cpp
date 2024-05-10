@@ -1,5 +1,5 @@
 #include <jni.h>
-#include "art.h"
+#include "art_runtime.h"
 #include "sliver/fetch_stack_visitor.h"
 #include "vector"
 #include <chrono>
@@ -27,9 +27,9 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
     isSameThread = true;
   }
   if (!isSameThread){
-    ArtHelper::getThreadList()->SuspendThreadByThreadId(thread->GetThreadId(),
-                                                        art::SuspendReason::kForUserCode,
-                                                        &timeOut);
+    ArtRuntime::Get()->GetThreadList()->SuspendThreadByThreadId(thread->GetThreadId(),
+                                                         art::SuspendReason::kForUserCode,
+                                                         &timeOut);
   }
 
   
@@ -44,10 +44,10 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
                             &stack_methods,
                             f);
   visitor.WalkStack(false);
-//  ArtHelper::StackVisitorWalkStack(&visitor, false);
+//  ArtRuntime::StackVisitorWalkStack(&visitor, false);
 
   if (!isSameThread){
-    ArtHelper::getThreadList()->Resume(thread, art::SuspendReason::kForUserCode);
+    ArtRuntime::Get()->GetThreadList()->Resume(thread, art::SuspendReason::kForUserCode);
   }
 
   std::vector<double> results(4);

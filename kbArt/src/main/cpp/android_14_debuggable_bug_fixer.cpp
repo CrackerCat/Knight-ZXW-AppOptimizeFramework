@@ -2,7 +2,7 @@
 #include <chrono>
 
 #include "cstddef"
-#include "art.h"
+#include "art_runtime.h"
 #include "class_linker.h"
 #include "object.h"
 #include "class.h"
@@ -28,7 +28,7 @@ void fix(){
   if (api_level == 34){
     auto start = std::chrono::steady_clock::now();
     FixClassVisitor visitor;
-    void *class_linker = reinterpret_cast<PartialRuntimeTiramisu *>(ArtHelper::partialRuntime)->class_linker_;
+    void *class_linker =ArtRuntime::Get()->GetClassLinker();
     VisitClasses(class_linker,&visitor);
     auto end = std::chrono::steady_clock::now();
     LOGI("Android14BugFixer","clear memory shared methods cost %lld us",
@@ -38,7 +38,5 @@ void fix(){
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_knightboost_artvm_Android14DebuggableBugFixer_fix(JNIEnv *env, jclass clazz) {
-  ArtHelper::init(env);
-
   fix();
 }
