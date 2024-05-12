@@ -34,6 +34,7 @@ class StackVisitor {
   const StackWalkKind walk_kind_ = StackWalkKind::kIncludeInlinedFrames;
   ShadowFrame *cur_shadow_frame_ = nullptr;
   void **cur_quick_frame_ = nullptr;
+  uintptr_t cur_quick_frame_pc_;
 
   //保证有足够的空间存放其他变量; detail see:
   //https://cs.android.com/android/platform/superproject/+/master:art/runtime/stack.h

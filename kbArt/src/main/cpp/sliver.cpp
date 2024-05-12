@@ -30,6 +30,7 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
     ArtRuntime::Get()->GetThreadList()->SuspendThreadByThreadId(thread->GetThreadId(),
                                                          art::SuspendReason::kForUserCode,
                                                          &timeOut);
+
   }
 
   

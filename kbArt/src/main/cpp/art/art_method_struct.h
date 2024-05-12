@@ -4,6 +4,7 @@
 
 #pragma once
 #include "base/primitive_types.h"
+namespace art {
 //23
 class ArtMethod_6 final {
  public:
@@ -74,7 +75,7 @@ class ArtMethod_7_1 final {
     void *entry_point_from_quick_compiled_code_;
   } ptr_sized_fields_;
 };
-//26~27
+//26~27 (8 and 8.1)
 class ArtMethod_8 final {
  public:
   uint32_t declaring_class_;
@@ -143,3 +144,4 @@ class ArtMethod_12 final {
     void *entry_point_from_quick_compiled_code_;
   } ptr_sized_fields_;
 };
+}

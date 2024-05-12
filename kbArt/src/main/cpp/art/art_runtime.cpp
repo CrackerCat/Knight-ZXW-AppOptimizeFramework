@@ -40,36 +40,13 @@ int findOffset(void *start, int regionStart, int regionEnd, T target) {
   return -1;
 }
 
-
-
-//jni::JniIdManager *ArtRuntime::getJniIdManager() {
-//  if (api_level_ < ANDROID_TIRAMISU) {
-//    return nullptr;
-//  }
-//  if (runtime == nullptr) {
-//    void *address = nullptr;
-//    if (api_level_ >= ANDROID_TIRAMISU) {
-//      address =
-//          static_cast<void *>(
-//              (reinterpret_cast<PartialRuntimeTiramisu *>(ArtRuntime::partialRuntime))->jni_id_manager_);
-//    } else if (api_level_ >= ANDROID_R) {
-//      address = static_cast<art::jni::JniIdManager *>(
-//          (reinterpret_cast<PartialRuntimeR *>(ArtRuntime::partialRuntime))->jni_id_manager_);
-//    }
-//    if (address != nullptr) {
-//      jniIdManager = static_cast<art::jni::JniIdManager *>(address);
-//    }
-//  }
-//  return static_cast<jni::JniIdManager *>(jniIdManager);
-//}
-
 bool ArtRuntime::SetJavaDebuggable(bool debuggable) {
   static void (*setJavaDebuggable)(void *, bool) = nullptr;
   if (setJavaDebuggable == nullptr) {
     setJavaDebuggable =
         reinterpret_cast<void (*)(void *, bool)>(dsym("_ZN3art7Runtime17SetJavaDebuggableEb"));
   }
-  if (setJavaDebuggable != nullptr) {
+  if (LIKELY(setJavaDebuggable != nullptr)) {
     setJavaDebuggable(runtime, debuggable);
     return true;
   }
@@ -82,7 +59,7 @@ bool ArtRuntime::DisableClassVerify() {
     DisableVerifierEv =
         reinterpret_cast<void (*)(void *)>(dsym("_ZN3art7Runtime15DisableVerifierEv"));
   }
-  if (DisableVerifierEv != nullptr) {
+  if (LIKELY(DisableVerifierEv != nullptr)) {
     DisableVerifierEv(ArtRuntime::runtime);
     return true;
   }
@@ -175,7 +152,6 @@ bool ArtRuntime::OnLoad(JavaVM *vm, JNIEnv *env, jclass java_class) {
   LOGE("zxw","开始尝试获取偏移");
   //art_method init
   if (api_level_ >= ANDROID_S && api_level_ <= ANDROID_UPSIDE_DOWN_CAKE) {
-    size_t offset = offsetof(ArtMethod_12, declaring_class_);
     method_offset_.declaring_class_offset_ = offsetof(ArtMethod_12, declaring_class_);
     method_offset_.access_flags_offset_ = offsetof(ArtMethod_12, access_flags_);
   } else if (api_level_ >= ANDROID_Q) {
@@ -184,8 +160,18 @@ bool ArtRuntime::OnLoad(JavaVM *vm, JNIEnv *env, jclass java_class) {
   } else if (api_level_ == ANDROID_P) {
     method_offset_.declaring_class_offset_ = offsetof(ArtMethod_9, declaring_class_);
     method_offset_.access_flags_offset_ = offsetof(ArtMethod_9, access_flags_);
-  } else if (api_level_ >= ANDROID_M) {
-
+  } else if (api_level_ >= ANDROID_O) {
+    method_offset_.declaring_class_offset_ = offsetof(ArtMethod_8, declaring_class_);
+    method_offset_.access_flags_offset_ = offsetof(ArtMethod_8, access_flags_);
+  } else if (api_level_ >=  ANDROID_N_MR1){
+    method_offset_.declaring_class_offset_ = offsetof(ArtMethod_7_1, declaring_class_);
+    method_offset_.access_flags_offset_ = offsetof(ArtMethod_7_1, access_flags_);
+  } else if (api_level_ >=  ANDROID_N){
+    method_offset_.declaring_class_offset_ = offsetof(ArtMethod_7, declaring_class_);
+    method_offset_.access_flags_offset_ = offsetof(ArtMethod_7, access_flags_);
+  } else if (api_level_ >=  ANDROID_M){
+    method_offset_.declaring_class_offset_ = offsetof(ArtMethod_6, declaring_class_);
+    method_offset_.access_flags_offset_ = offsetof(ArtMethod_6, access_flags_);
   }
   //TODO 对偏移进行检查，如果偏移不准确，则认为该系统可能魔改后，位移不一致。
 
