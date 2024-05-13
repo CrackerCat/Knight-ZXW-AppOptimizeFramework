@@ -44,7 +44,7 @@ class StackVisitor {
     static void (*walk)(art::StackVisitor *, bool) = nullptr;
     if (walk == nullptr) {
       walk = reinterpret_cast<void (*)(art::StackVisitor *,
-                                       bool)>(dsym(
+                                       bool)>(findArtSoSym(
           "_ZN3art12StackVisitor9WalkStackILNS0_16CountTransitionsE0EEEvb"));
     }
     walk(this, include_transitions);

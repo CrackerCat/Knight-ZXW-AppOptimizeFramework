@@ -1,6 +1,7 @@
 #include <jni.h>
 #include "art_thread.h"
 #include "logger.h"
+#include "art_runtime.h"
 //
 // Created by Knight-ZXW on 2023/6/1.
 //
@@ -38,4 +39,30 @@ Java_com_knightboost_artvm_ArtThread_getCpuMicroTime(JNIEnv *env, jclass clazz, 
   auto *artThread = reinterpret_cast<art::Thread *>(nativePeerValue);
   return artThread->GetCpuMicroTime();
   return 1;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_knightboost_artvm_ArtThread_resumeThread(JNIEnv *env, jclass clazz, jlong thread_native_peer) {
+  // TODO: implement resumeThread()
+  art::ArtRuntime::Get()->GetThreadList()->Resume((void *)thread_native_peer,art::SuspendReason::kForUserCode);
+}
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_com_knightboost_artvm_ArtThread_suspendThreadByThreadId(JNIEnv *env, jclass clazz, jint thread_id) {
+  // TODO: implement suspendThreadByThreadId()
+  bool timeOut;
+  art::ThreadList *thread_list = art::ArtRuntime::Get()->GetThreadList();
+//  if (thread_list == nullptr){
+//    LOGE("zxw","thread_list is null");
+//  } else {
+//    LOGE("zxw","thread_list 不为null");
+//
+//  }
+  void *thread = thread_list->SuspendThreadByThreadId(thread_id, art::SuspendReason::kForUserCode, &timeOut);
+  if (thread == nullptr) {
+    return -1;
+  } else {
+    return reinterpret_cast<jlong>(thread);
+  }
 }

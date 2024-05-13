@@ -15,6 +15,7 @@ public class KbArt {
                 return;
             }
             System.loadLibrary("kbArt");
+            inited = true;
         }catch (Exception e){
             inited = false;
         }

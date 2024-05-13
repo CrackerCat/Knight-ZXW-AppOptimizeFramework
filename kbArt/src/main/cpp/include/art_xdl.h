@@ -3,5 +3,8 @@
 //
 
 #pragma once
-void *get_art_handle();
-void *dsym(const char *symbol);
+void *open_art_handle();
+void *dsym(void *handle, const char *symbol);
+void *close_handle(void* handle);
+void *findArtSoSym(const char*symbol);
+#define once_dysm

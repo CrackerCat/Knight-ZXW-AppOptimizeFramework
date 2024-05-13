@@ -27,6 +27,7 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
     isSameThread = true;
   }
   if (!isSameThread){
+    //TODO 判断是否超时
     ArtRuntime::Get()->GetThreadList()->SuspendThreadByThreadId(thread->GetThreadId(),
                                                          art::SuspendReason::kForUserCode,
                                                          &timeOut);

@@ -5,7 +5,7 @@
 void art::Dbg::Dbg::SetJdwpAllowed(bool allowed) {
   static void (*setJdwpAllowed)(bool) = nullptr;
   if (setJdwpAllowed == nullptr) {
-    setJdwpAllowed = reinterpret_cast<void (*)(bool)>(dsym("_ZN3art3Dbg14SetJdwpAllowedEb"));
+    setJdwpAllowed = reinterpret_cast<void (*)(bool)>(findArtSoSym("_ZN3art3Dbg14SetJdwpAllowedEb"));
   }
   if (setJdwpAllowed != nullptr) {
     setJdwpAllowed(allowed);
@@ -16,7 +16,7 @@ bool art::Dbg::Dbg::IsJdwpAllowed() {
   static bool (*isJdwpAllow)() = nullptr;
   if (isJdwpAllow == nullptr) {
     isJdwpAllow =
-        reinterpret_cast<bool (*)()>(dsym( "_ZN3art3Dbg13IsJdwpAllowedEv"));
+        reinterpret_cast<bool (*)()>(findArtSoSym( "_ZN3art3Dbg13IsJdwpAllowedEv"));
   }
   return isJdwpAllow();
 }

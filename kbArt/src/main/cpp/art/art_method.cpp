@@ -3,6 +3,7 @@
 //
 #include "art_method.h"
 #include "cxx_helper.h"
+#include "art_xdl.h"
 uint32_t ArtMethod::GetAccessFlags() const  {
   return MemberOf<uint32_t>(art_method_ptr_, offset_->access_flags_offset_);
 }
@@ -33,7 +34,8 @@ bool ArtMethod::IsIntrinsic(uint32_t access_flags) {
 std::string ArtMethod::PrettyMethod(bool withSignature) {
   static std::string (*_PrettyMethod)(void *, bool) = nullptr;
   if (_PrettyMethod == nullptr) {
-    _PrettyMethod = (std::string (*)(void *, bool)) dsym(
+
+    _PrettyMethod = (std::string (*)(void *, bool)) findArtSoSym(
         "_ZN3art9ArtMethod12PrettyMethodEPS0_b");
   }
   return _PrettyMethod(this, withSignature);

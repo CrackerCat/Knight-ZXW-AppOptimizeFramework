@@ -29,12 +29,6 @@
         android:text="开始打印CPU频率"
         />
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btn_test_getThreadCpuTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="获取线程cpuTime测试"
-        />
 
     <LinearLayout
         android:layout_width="match_parent"

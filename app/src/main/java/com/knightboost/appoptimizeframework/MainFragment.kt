@@ -47,6 +47,7 @@ class MainFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        SliverTestActivity.start(requireContext())
 
         binding.btnAndroidDebugFix.setOnClickListener{
             Android14DebuggableBugFixer.fix()
@@ -63,22 +64,6 @@ class MainFragment : Fragment() {
         binding.btnCpuBindCore.setOnClickListener {
             threadCpuBindTest()
         }
-
-        binding.btnTestGetThreadCpuTime.setOnClickListener {
-
-            val nativePeer = ArtThread.getNativePeer(Looper.getMainLooper().thread)
-
-
-            val mainThreadCpuMicroTime = ArtThread.getCpuMicroTime(nativePeer)
-            Log.d("zxw","主线程CpuMicroTime "+mainThreadCpuMicroTime)
-
-            val frames = Sliver.nativeGetMethodStackTrace(nativePeer);
-            val prettyMethods = Sliver.prettyMethods(frames)
-            Log.e("zxw","methods is "+prettyMethods)
-
-
-        }
-
 
         binding.btnGetMainThreadAffinity.setOnClickListener {
 

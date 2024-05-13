@@ -44,7 +44,7 @@ bool ArtRuntime::SetJavaDebuggable(bool debuggable) {
   static void (*setJavaDebuggable)(void *, bool) = nullptr;
   if (setJavaDebuggable == nullptr) {
     setJavaDebuggable =
-        reinterpret_cast<void (*)(void *, bool)>(dsym("_ZN3art7Runtime17SetJavaDebuggableEb"));
+        reinterpret_cast<void (*)(void *, bool)>(findArtSoSym("_ZN3art7Runtime17SetJavaDebuggableEb"));
   }
   if (LIKELY(setJavaDebuggable != nullptr)) {
     setJavaDebuggable(runtime, debuggable);
@@ -57,7 +57,7 @@ bool ArtRuntime::DisableClassVerify() {
   static void (*DisableVerifierEv)(void *) = nullptr;
   if (DisableVerifierEv == nullptr) {
     DisableVerifierEv =
-        reinterpret_cast<void (*)(void *)>(dsym("_ZN3art7Runtime15DisableVerifierEv"));
+        reinterpret_cast<void (*)(void *)>(findArtSoSym("_ZN3art7Runtime15DisableVerifierEv"));
   }
   if (LIKELY(DisableVerifierEv != nullptr)) {
     DisableVerifierEv(ArtRuntime::runtime);

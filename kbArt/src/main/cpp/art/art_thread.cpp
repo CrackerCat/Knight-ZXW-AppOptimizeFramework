@@ -40,7 +40,7 @@ uint64_t art::Thread::GetCpuMicroTime() {
   static GetCpuMicroTime_t get_cpu_micro_time = nullptr;
   if (UNLIKELY( get_cpu_micro_time == nullptr)) {
     get_cpu_micro_time =
-        reinterpret_cast<GetCpuMicroTime_t>(xdl_dsym(get_art_handle(),
+        reinterpret_cast<GetCpuMicroTime_t>(xdl_dsym(open_art_handle(),
                                                      "_ZNK3art6Thread15GetCpuMicroTimeEv",
                                                      nullptr));
   }

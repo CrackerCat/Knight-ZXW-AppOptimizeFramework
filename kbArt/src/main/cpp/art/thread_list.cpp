@@ -3,7 +3,7 @@
 //
 #include "thread_list.h"
 #include "art_xdl.h"
-
+#include "logger.h"
 namespace art {
 
 
@@ -21,8 +21,13 @@ void *ThreadList::SuspendThreadByThreadId(uint32_t threadId,
         reinterpret_cast<void *(*)(void *,
                                    uint32_t,
                                    SuspendReason,
-                                   bool *)>(dsym(
+                                   bool *)>(findArtSoSym(
             "_ZN3art10ThreadList23SuspendThreadByThreadIdEjNS_13SuspendReasonEPb"));
+    if (suspend_thread_by_thread_id == nullptr){
+      LOGE("zxw","suspend_thread_by_thread_id func is null");
+    } else{
+      LOGE("zxw","函数不为空 suspend_thread_by_thread_id func is %p",suspend_thread_by_thread_id);
+    }
   }
   //
   return suspend_thread_by_thread_id(this, threadId, suspendReason, timed_out);
@@ -34,7 +39,7 @@ bool ThreadList::Resume(void *thread, SuspendReason suspendReason) {
   if (resume == nullptr) {
     resume = reinterpret_cast<bool (*)(void *thread_list,
                                        void *thread,
-                                       SuspendReason suspendReason)>(dsym(
+                                       SuspendReason suspendReason)>(findArtSoSym(
         "_ZN3art10ThreadList6ResumeEPNS_6ThreadENS_13SuspendReasonE"));
   }
   return resume(this, thread, suspendReason);
