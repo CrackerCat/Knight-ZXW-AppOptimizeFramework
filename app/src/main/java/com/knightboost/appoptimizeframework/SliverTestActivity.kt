@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.knightboost.appoptimizeframework.databinding.ActivitySliverTestBinding
 import com.knightboost.artvm.ArtThread
 import com.knightboost.sliver.Sliver
+import com.knightboost.test.Test
+import java.lang.StringBuilder
 
 class SliverTestActivity : AppCompatActivity() {
 
@@ -76,27 +78,26 @@ class SliverTestActivity : AppCompatActivity() {
         }
 
         binding.btnSuspendMainThread.setOnClickListener {
-            Log.e("zxw","按钮点击了")
+            Handler(Looper.getMainLooper()).postDelayed( {
+                Log.e("zxw","主线程开始进入死循环状态")
+                Test.infiniteRun()
+            },0)
             Thread {
-                Log.e("zxw", "${Thread.currentThread().id} 尝试暂停主线程")
-                var nativePeer = ArtThread.suspendThreadByThreadId(ArtThread.getTid(Looper.getMainLooper().thread))
-                Log.e("zxw", "${Thread.currentThread().id} 暂停了主线程，nativePeerId ${nativePeer}")
-//                 nativePeer = ArtThread.suspendThreadByThreadId(ArtThread.getTid(Looper.getMainLooper().thread))
-//                Log.e("zxw","线程已暂停，再次调用暂停后，返回 ${nativePeer}")
-                ArtThread.resumeThread(nativePeer);
-                Log.e("zxw", "${Thread.currentThread().id} 恢复主线程")
-//                ArtThread.resumeThread(nativePeer);
-//                Log.e("zxw","${Thread.currentThread().id} 恢复主线程2")
+                while (true) {
+                    Thread.sleep(50)
 
-            }.start()
+                    Log.e("zxw", "开始获取主线程调用栈")
+                    val b0 = SystemClock.elapsedRealtimeNanos()
+                    val stackTrace = Looper.getMainLooper().thread.stackTrace
+                    var sb:StringBuilder =StringBuilder()
+                    stackTrace.forEach {
+                        sb.append(it.toString())
+                    }
+                    Log.e("zxw","主线程调用栈 ${sb}")
+                    val b1 = SystemClock.elapsedRealtimeNanos()
+                    Log.e("zxw", "获取主线程调用栈成功耗时 ${(b1-b0)/1000} 微秒")
+                }
 
-            Thread {
-                Log.e("zxw","${Thread.currentThread().id} 尝试暂停主线程")
-                val nativePeer = ArtThread.suspendThreadByThreadId(ArtThread.getTid(Looper.getMainLooper().thread))
-                Log.e("zxw","${Thread.currentThread().id} 尝试暂停主线程，nativePeerId ${nativePeer}")
-                Thread.sleep(2000)
-                ArtThread.resumeThread(nativePeer);
-                Log.e("zxw","${Thread.currentThread().id} 恢复主线程")
             }.start()
         }
 

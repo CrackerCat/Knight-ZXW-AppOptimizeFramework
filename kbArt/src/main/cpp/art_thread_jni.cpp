@@ -35,10 +35,8 @@ Java_com_knightboost_artvm_ArtThread_getTid(JNIEnv *env,
 extern "C"
 JNIEXPORT jlong JNICALL
 Java_com_knightboost_artvm_ArtThread_getCpuMicroTime(JNIEnv *env, jclass clazz, jlong nativePeerValue) {
-  LOGE("zxw","开始获取cpuTime");
   auto *artThread = reinterpret_cast<art::Thread *>(nativePeerValue);
   return artThread->GetCpuMicroTime();
-  return 1;
 }
 
 extern "C"
@@ -53,12 +51,6 @@ Java_com_knightboost_artvm_ArtThread_suspendThreadByThreadId(JNIEnv *env, jclass
   // TODO: implement suspendThreadByThreadId()
   bool timeOut;
   art::ThreadList *thread_list = art::ArtRuntime::Get()->GetThreadList();
-//  if (thread_list == nullptr){
-//    LOGE("zxw","thread_list is null");
-//  } else {
-//    LOGE("zxw","thread_list 不为null");
-//
-//  }
   void *thread = thread_list->SuspendThreadByThreadId(thread_id, art::SuspendReason::kForUserCode, &timeOut);
   if (thread == nullptr) {
     return -1;

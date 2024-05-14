@@ -1,7 +1,5 @@
 package com.knightboost.artvm;
 
-import android.os.Build;
-
 public class KbArt {
     private static boolean inited = false;
 
