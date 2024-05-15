@@ -24,6 +24,7 @@ aux_source_directory(src/main/cpp/art/jni JNI_SRC)
 aux_source_directory(src/main/cpp/art/mirror MIRROR_SRC)
 aux_source_directory(src/main/cpp/art/stack STACK_SRC)
 aux_source_directory(src/main/cpp/sliver SRC_DIR_Sliver)
+aux_source_directory(src/main/cpp/opt SRC_OPT)
 
 add_library( # Sets the name of the library.
         kbArt
@@ -35,12 +36,11 @@ add_library( # Sets the name of the library.
         ${MIRROR_SRC}
         ${STACK_SRC}
         ${SRC_DIR_Sliver}
+        ${SRC_OPT}
         # Provides a relative path to your source file(s).
-        src/main/cpp/sliver.cpp
         src/main/cpp/art_vm.cpp
         src/main/cpp/art_thread_jni.cpp
         src/main/cpp/art_jni.cpp
-        src/main/cpp/android_14_debuggable_bug_fixer.cpp
         src/main/cpp/test.cpp
         src/main/cpp/opt/suspend_time_out_fix.cpp
         )

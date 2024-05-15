@@ -9,6 +9,17 @@
 
 static jfieldID nativePeerField = NULL;
 
+
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_knightboost_artvm_ArtThread_getThreadId(JNIEnv *env, jclass clazz, jlong nativePeer) {
+  // TODO: implement getThreadId()
+  auto *artThread = reinterpret_cast<art::Thread *>(nativePeer);
+  uint32_t tid = artThread->GetThreadId();
+  return tid;
+}
+
 extern "C"
 JNIEXPORT jint JNICALL
 Java_com_knightboost_artvm_ArtThread_getTid(JNIEnv *env,

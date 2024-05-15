@@ -14,6 +14,7 @@ public class ArtThread {
      * @return
      */
     public static native int getTid(Thread thread);
+    public static native int getThreadId(long threadNativePeer);
 
     /**
      * 返回art::Thread 当前的cpuMicroTime
