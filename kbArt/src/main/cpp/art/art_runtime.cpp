@@ -152,11 +152,11 @@ bool ArtRuntime::OnLoad(JavaVM *vm, JNIEnv *env, jclass java_class) {
   LOGE("zxw","开始尝试获取偏移");
   //art_method init
   if (api_level_ >= ANDROID_S && api_level_ <= ANDROID_UPSIDE_DOWN_CAKE) {
-    method_offset_.declaring_class_offset_ = offsetof(ArtMethod_12, declaring_class_);
-    method_offset_.access_flags_offset_ = offsetof(ArtMethod_12, access_flags_);
+    method_offset_.declaring_class_offset_ = offsetof(ArtMethod12_14, declaring_class_);
+    method_offset_.access_flags_offset_ = offsetof(ArtMethod12_14, access_flags_);
   } else if (api_level_ >= ANDROID_Q) {
-    method_offset_.declaring_class_offset_ = offsetof(ArtMethod_10, declaring_class_);
-    method_offset_.access_flags_offset_ = offsetof(ArtMethod_10, access_flags_);
+    method_offset_.declaring_class_offset_ = offsetof(ArtMethod10_11, declaring_class_);
+    method_offset_.access_flags_offset_ = offsetof(ArtMethod10_11, access_flags_);
   } else if (api_level_ == ANDROID_P) {
     method_offset_.declaring_class_offset_ = offsetof(ArtMethod_9, declaring_class_);
     method_offset_.access_flags_offset_ = offsetof(ArtMethod_9, access_flags_);

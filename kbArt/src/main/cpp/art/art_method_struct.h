@@ -109,7 +109,7 @@ class ArtMethod_9 final {
 };
 
 // 29~30
-class ArtMethod_10 final {
+class ArtMethod10_11 final {
  public:
   uint32_t declaring_class_;
   uint32_t access_flags_;
@@ -128,7 +128,7 @@ class ArtMethod_10 final {
 };
 
 // 31~34
-class ArtMethod_12 final {
+class ArtMethod12_14 final {
  public:
   uint32_t declaring_class_;
   uint32_t access_flags_;
