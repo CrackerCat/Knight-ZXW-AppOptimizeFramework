@@ -1,5 +1,5 @@
 package com.knightboost.test;
 
 public class Test {
-    public static native void infiniteRun();
+    public static native void callNativeThreadSuspendTimeout(Thread targetThread,long nativePeer);
 }

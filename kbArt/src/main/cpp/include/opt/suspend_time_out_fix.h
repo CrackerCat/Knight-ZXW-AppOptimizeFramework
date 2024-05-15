@@ -19,7 +19,6 @@ enum LogSeverity {
 
 namespace kbArt {
 
-void preventTargetThreadSuspendTimeOutFatal(long tid);
 LogSeverity ToLogSeverity(int logLevel);
 
 const char *getThreadSuspendByPeerWarningFunctionName();

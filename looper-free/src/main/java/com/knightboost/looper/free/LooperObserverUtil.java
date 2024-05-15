@@ -2,12 +2,12 @@ package com.knightboost.looper.free;
 
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.sql.Ref;
 
 public class LooperObserverUtil {
+    private static final String TAG = "LooperUtil";
 
     public static boolean setObserver(final LooperMessageObserver looperMessageObserver) {
         try {
@@ -23,9 +23,34 @@ public class LooperObserverUtil {
                     "messageDispatched",Object.class, Message.class);
             Method dispatchingThrewException =ReflectUtil.getDeclaredMethod(classObserver,
                     "messageDispatchStarting");
-
             if (messageDispatchStarting == null || messageDispatched == null ||
                     dispatchingThrewException == null) {
+                return false;
+            }
+
+            //验证函数是否可调用
+            try {
+                Looper.Observer observer = new Looper.Observer() {
+                    @Override
+                    public Object messageDispatchStarting() {
+                        return null;
+                    }
+
+                    @Override
+                    public void messageDispatched(Object token, Message msg) {
+
+                    }
+
+                    @Override
+                    public void dispatchingThrewException(Object token, Message msg, Exception exception) {
+
+                    }
+                };
+                observer.messageDispatchStarting();
+                observer.dispatchingThrewException(null,null,null);
+                observer.messageDispatched(null,null);
+            }catch (IncompatibleClassChangeError | Exception e){
+                Log.w(TAG,"use Observer to watching Looper failed",e);
                 return false;
             }
 
@@ -48,7 +73,6 @@ public class LooperObserverUtil {
 
                     @Override
                     public void dispatchingThrewException(Object token, Message msg, Exception exception) {
-                        System.out.println("捕获到异常 dispatchingThrewException");
                         oldObserver.dispatchingThrewException(token, msg, exception);
                         looperMessageObserver.dispatchingThrewException(token, msg, exception);
                     }
@@ -76,12 +100,10 @@ public class LooperObserverUtil {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.w(TAG,"set or replace Observer to watching Looper failed",e);
             return false;
         }
         return true;
     }
-
-
 
 }

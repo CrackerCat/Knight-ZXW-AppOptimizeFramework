@@ -42,7 +42,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/art_jni.cpp
         src/main/cpp/android_14_debuggable_bug_fixer.cpp
         src/main/cpp/test.cpp
-        src/main/cpp/suspend_time_out_fix.cpp
+        src/main/cpp/opt/suspend_time_out_fix.cpp
         )
 
 target_include_directories(kbArt PUBLIC
@@ -53,6 +53,7 @@ target_include_directories(kbArt PUBLIC
         src/main/cpp/include/base
         src/main/cpp/include/jni
         src/main/cpp/include/mirror
+        src/main/cpp/include/opt
 )
 
 

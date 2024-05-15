@@ -2,10 +2,10 @@
 // Created by Knight-ZXW on 2024/5/14.
 //
 
-#include "suspend_time_out_fix.h"
+#include "opt/suspend_time_out_fix.h"
 #include "art_runtime.h"
 #include "shadowhook.h"
-#include "jni_util.h"
+#include "kbart_jni.h"
 namespace kbArt {
 using namespace art;
 #define TARGET_ART_LIB "libart.so"
@@ -19,8 +19,7 @@ using namespace art;
 jobject callbackObj = nullptr; // 全局引用，指向Java层的监听回调对象
 void *originalFunction = nullptr; // 指向原始函数的指针
 void *stubFunction = nullptr; // 指向存根函数的指针
-std::atomic<LogSeverity> m_severity{INFO}; // 日志严重性级别的原子变量，默认为INFO
-
+std::atomic<LogSeverity> m_severity{WARNING}; // 日志严重性级别的原子变量，默认为INFO
 
 typedef void (*ThreadSuspendByPeerWarning)(void *self, LogSeverity severity,
                                            const char *message, jobject peer); // 函数指针类型定义
@@ -54,7 +53,7 @@ void hookPointFailed(const char *errMsg) {
 }
 
 
-//通知原始函数异常
+//通知Java层观察者，出现suspendTimeout异常
 void triggerSuspendTimeout() {
   // 触发挂起超时处理
   JNIEnv *pEnv = getJNIEnv();
@@ -74,10 +73,10 @@ void triggerSuspendTimeout() {
 
 
 // Hook 函数实现，替换原始函数
-void threadSuspendByPeerWarning(void *self, LogSeverity severity, const char *message,
-                                jobject peer) {
-  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Hooked point success : %s", message);
+void proxyThreadSuspendTimeoutWarning(void *self, LogSeverity severity, const char *message,
+                                      jobject peer) {
   if (severity == FATAL && strcmp(message, SUSPEND_LOG_MSG) == 0) {
+    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Hooked threadSuspendTimeout success : %s", message);
     // 如果当前是 FATAL 并且 message 是 Thread suspend timeout 则设置一个非FATAL级别的。
     severity = m_severity.load();
     triggerSuspendTimeout();
@@ -115,10 +114,6 @@ void preparedMaskThreadTimeoutAbort() {
 }
 
 
-
-void preventTargetThreadSuspendTimeOutFatal(long tid) {
-
-}
 LogSeverity ToLogSeverity(int logLevel) {
   switch (logLevel) {
     case 0:return VERBOSE;
@@ -143,7 +138,7 @@ const char *getThreadSuspendByPeerWarningFunctionName() {
   } else if (apiLevel < 34) {
     // above android 8 and below android 14
     return SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_8_13;
-  } else {
+  } else if (apiLevel == 34) {
     // android 14+
     return SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_14;
   }
@@ -151,17 +146,18 @@ const char *getThreadSuspendByPeerWarningFunctionName() {
 
 
 void releaseHook() {
-  // 实现释放钩子的功能
+  // 已Hook过 取消之前的hook
   if (stubFunction != nullptr) {
     shadowhook_unhook(stubFunction);
     stubFunction = nullptr;
   }
 }
+
 void prepareSetSuspendTimeoutLevel() { // 准备设置挂起超时级别的函数
   releaseHook();
   stubFunction = shadowhook_hook_sym_name(TARGET_ART_LIB,
                                           getThreadSuspendByPeerWarningFunctionName(),
-                                          (void *) threadSuspendByPeerWarning,
+                                          (void *) proxyThreadSuspendTimeoutWarning,
                                           (void **) &originalFunction);
   if (stubFunction == nullptr) {
     const int err_num = shadowhook_get_errno();
@@ -184,23 +180,23 @@ void cleanup(JNIEnv *env) {
     env->DeleteGlobalRef(callbackObj);
     callbackObj = nullptr;
   }
-  if (kbArt::g_javaVM->DetachCurrentThread() != JNI_OK) {
+  if (kbArt::gJavaVM->DetachCurrentThread() != JNI_OK) {
     __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Could not detach current thread.");
   }
 }
 
+
 /**
- * 防止目标线程suspend异常
+ * 防止目标线程调用suspend异常
  */
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_knightboost_sliver_Sliver_preventThreadSuspendTimeoutFatal(JNIEnv *env, jclass clazz, jlong tid,jobject callback) {
+Java_com_knightboost_sliver_Sliver_preventThreadSuspendTimeoutFatal(JNIEnv *env, jclass clazz, jobject callback) {
   if (callbackObj != nullptr) {
     env->DeleteGlobalRef(callbackObj);
   }
   callbackObj = env->NewGlobalRef(callback);
   preparedMaskThreadTimeoutAbort();
-
 }
 
 

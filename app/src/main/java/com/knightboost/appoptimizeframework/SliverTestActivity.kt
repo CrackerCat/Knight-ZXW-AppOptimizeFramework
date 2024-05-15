@@ -11,9 +11,11 @@ import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import com.knightboost.appoptimizeframework.databinding.ActivitySliverTestBinding
 import com.knightboost.artvm.ArtThread
+import com.knightboost.sliver.HookSuspendThreadTimeoutCallback
 import com.knightboost.sliver.Sliver
 import com.knightboost.test.Test
 import java.lang.StringBuilder
+import java.util.HexFormat
 
 class SliverTestActivity : AppCompatActivity() {
 
@@ -36,7 +38,6 @@ class SliverTestActivity : AppCompatActivity() {
 
 
             val nativePeer = ArtThread.getNativePeer(Looper.getMainLooper().thread)
-
 
             val mainThreadCpuMicroTime = ArtThread.getCpuMicroTime(nativePeer)
             Log.d("zxw","主线程CpuMicroTime "+mainThreadCpuMicroTime)
@@ -78,26 +79,17 @@ class SliverTestActivity : AppCompatActivity() {
         }
 
         binding.btnSuspendMainThread.setOnClickListener {
-            Handler(Looper.getMainLooper()).postDelayed( {
-                Log.e("zxw","主线程开始进入死循环状态")
-                Test.infiniteRun()
-            },0)
-            Thread {
-                while (true) {
-                    Thread.sleep(50)
-
-                    Log.e("zxw", "开始获取主线程调用栈")
-                    val b0 = SystemClock.elapsedRealtimeNanos()
-                    val stackTrace = Looper.getMainLooper().thread.stackTrace
-                    var sb:StringBuilder =StringBuilder()
-                    stackTrace.forEach {
-                        sb.append(it.toString())
-                    }
-                    Log.e("zxw","主线程调用栈 ${sb}")
-                    val b1 = SystemClock.elapsedRealtimeNanos()
-                    Log.e("zxw", "获取主线程调用栈成功耗时 ${(b1-b0)/1000} 微秒")
+            Sliver.preventThreadSuspendTimeoutFatal(object :HookSuspendThreadTimeoutCallback{
+                override fun triggerSuspendTimeout() {
+                    Log.e("zxw","系统触发了timeout")
                 }
 
+                override fun onError(error: String?) {
+                    Log.e("zxw","preventThreadSuspendTimeoutFatal error")
+                }
+            })
+            Thread {
+                Test.callNativeThreadSuspendTimeout(Thread.currentThread(),ArtThread.getNativePeer(Thread.currentThread()));
             }.start()
         }
 
