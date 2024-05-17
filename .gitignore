@@ -16,6 +16,7 @@
 .cxx
 local.properties
 cUploadSetting.gradle
+d_deploy.gradle
 rheatrace.workspace
 output.pb
 *.jar
