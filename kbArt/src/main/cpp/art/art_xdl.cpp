@@ -7,7 +7,7 @@
 
 void *open_art_handle() {
   char *artPath = getLibArtPath();
-  void* handle = xdl_open("libart.so",
+  void* handle = xdl_open(artPath,
                           XDL_TRY_FORCE_LOAD);
   return handle;
 }

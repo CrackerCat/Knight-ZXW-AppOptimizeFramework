@@ -20,17 +20,20 @@ typedef void (*ThreadSuspendByPeerWarning)(void *self,
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_knightboost_test_Test_callNativeThreadSuspendTimeout(JNIEnv *env, jclass clazz, jobject target_thread, jlong native_peer) {
-  void *handle = shadowhook_dlopen("libart.so");
-  auto hookPointFunc = (ThreadSuspendByPeerWarning) shadowhook_dlsym(handle,
-                                                                     kbArt::getThreadSuspendByPeerWarningFunctionName());
-  if (hookPointFunc != nullptr) {
+Java_com_knightboost_test_SuspendTimeoutTest_callNativeThreadSuspendTimeout(JNIEnv *env, jclass clazz, jobject target_thread, jlong native_peer) {
+  void *handle = shadowhook_dlopen(getLibArtPath());
+
+  auto targetFunc = (ThreadSuspendByPeerWarning) shadowhook_dlsym(handle,
+                                                                  kbArt::getThreadSuspendByPeerWarningFunctionName());
+  __android_log_print(ANDROID_LOG_ERROR, "TEST", "_ZN3art3jit14JitCompileTask3RunEPNS_6ThreadE p1 = %p", targetFunc);
+
+  if (targetFunc != nullptr) {
     void *child_thread = reinterpret_cast<void *>(native_peer);
     // only 14 worked for test.
-    __android_log_print(ANDROID_LOG_INFO, "TEST", "thread_point : %p", child_thread);
-    hookPointFunc(child_thread, FATAL, SUSPEND_LOG_MSG, target_thread);
+    __android_log_print(ANDROID_LOG_INFO, "TEST", "thread_point : %p ,hookPointFunc address  %p", child_thread, targetFunc);
+    targetFunc(child_thread, WARNING, SUSPEND_LOG_MSG, target_thread);
   } else {
-    __android_log_print(ANDROID_LOG_ERROR, "TEST", "ELF symbol not found!");
+    __android_log_print(ANDROID_LOG_ERROR, "TEST", "ELF symbol not found!!");
   }
   shadowhook_dlclose(handle);
 }

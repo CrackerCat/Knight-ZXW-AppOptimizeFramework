@@ -13,7 +13,7 @@ import com.knightboost.appoptimizeframework.databinding.ActivitySliverTestBindin
 import com.knightboost.artvm.ArtThread
 import com.knightboost.sliver.HookSuspendThreadTimeoutCallback
 import com.knightboost.sliver.Sliver
-import com.knightboost.test.Test
+import com.knightboost.test.SuspendTimeoutTest
 import java.lang.StringBuilder
 import java.util.HexFormat
 
@@ -78,31 +78,24 @@ class SliverTestActivity : AppCompatActivity() {
             }.start()
         }
 
+        Sliver.preventThreadSuspendTimeoutFatalLog(object :HookSuspendThreadTimeoutCallback{
+            override fun triggerSuspendTimeout() {
+                Log.e("sliver","系统触发了timeout")
+            }
+
+            override fun onError(error: String?) {
+                Log.e("sliver","preventThreadSuspendTimeoutFatal error")
+            }
+        })
         binding.btnSuspendMainThread.setOnClickListener {
-//            Sliver.preventThreadSuspendTimeoutFatal(object :HookSuspendThreadTimeoutCallback{
-//                override fun triggerSuspendTimeout() {
-//                    Log.e("zxw","系统触发了timeout")
-//                }
-//
-//                override fun onError(error: String?) {
-//                    Log.e("zxw","preventThreadSuspendTimeoutFatal error")
-//                }
-//            })
-//            Thread {
-//                Test.callNativeThreadSuspendTimeout(Thread.currentThread(),ArtThread.getNativePeer(Thread.currentThread()));
-//            }.start()
-            Thread{
-                Log.e("zxw","主线程tid  = $mainThreadTid")
-                var nativePeer = ArtThread.suspendThreadByThreadId(mainThreadTid)
-                val stackTrace = Looper.getMainLooper().thread.stackTrace
-                if (nativePeer!=-1L){
-                    ArtThread.resumeThread(nativePeer)
-                    Log.e("zxw","恢复主线程成功 ,nativePeer = $nativePeer ,Java nativePeer = " +
-                            "${ArtThread.getNativePeer(Looper.getMainLooper().thread)}")
-                }else{
-                    Log.e("zxw","suspend 失败")
+
+            Thread {
+                while (true){
+                    Thread.sleep(1000)
+                    SuspendTimeoutTest.callNativeThreadSuspendTimeout(Thread.currentThread(),ArtThread.getNativePeer(Thread.currentThread()));
                 }
             }.start()
+
 
         }
 

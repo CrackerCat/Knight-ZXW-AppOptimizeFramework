@@ -4,15 +4,18 @@ buildscript {
     file("local.properties").withInputStream { inputStream ->
         properties.load(inputStream)
     }
+    ext.isDEnv = properties.getProperty("C_MAVEN")!=null
+    ext.D_DEPLOY_PLUGIN_NAME = properties.getProperty("D_DEPLOY_PLUGIN_NAME")
+
     repositories {
         //TODO
+        mavenCentral()
+        maven { setUrl("https://maven.aliyun.com/repository/public") }
+        maven { setUrl("https://maven.aliyun.com/repository/google") }
         var cMaven = properties.getProperty("C_MAVEN")
         if (cMaven!=null){
             maven { url cMaven }
         }
-        mavenCentral()
-        maven { setUrl("https://maven.aliyun.com/repository/public") }
-        maven { setUrl("https://maven.aliyun.com/repository/google") }
         maven { url 'https://jitpack.io' }
         maven { setUrl("https://artifact.bytedance.com/repository/byteX/") }
         google()
@@ -57,6 +60,14 @@ allprojects {
         enabled = false
     }
 }
+isDEnv = ext.isDEnv
+D_DEPLOY_PLUGIN_NAME =ext.D_DEPLOY_PLUGIN_NAME
+//subprojects {
+//    if (isDEnv){
+//        System.out.println("apply plugin: $D_DEPLOY_PLUGIN_NAME")
+//        apply plugin:D_DEPLOY_PLUGIN_NAME
+//    }
+//}
 
 
 if (properties.getProperty("I_C")!=null){
@@ -72,6 +83,7 @@ if (properties.getProperty("I_C")!=null){
         plugins.withId("com.vanniktech.maven.publish") {
             mavenPublish {
                 sonatypeHost = "s01"
+                apply plugin: "com.vanniktech.maven.publish"
             }
         }
     }

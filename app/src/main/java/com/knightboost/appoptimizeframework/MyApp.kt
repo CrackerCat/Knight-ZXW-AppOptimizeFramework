@@ -24,11 +24,6 @@ class MyApp : Application() {
         }catch (e:java.lang.Exception){
             e.stackTraceToString()
         }
-        ShadowHook.init(
-            ShadowHook.ConfigBuilder()
-                .setMode(ShadowHook.Mode.UNIQUE)
-                .build()
-        )
 
         //hidden api exemption 是必要的
         Timber.plant(Timber.DebugTree())
