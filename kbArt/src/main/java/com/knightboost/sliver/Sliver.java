@@ -1,6 +1,5 @@
 package com.knightboost.sliver;
 
-import android.util.Log;
 
 import androidx.annotation.Keep;
 
@@ -14,8 +13,6 @@ public class Sliver {
             ShadowHook.init(
                     new ShadowHook.ConfigBuilder()
                             .setMode(ShadowHook.Mode.SHARED)
-                            .setDebuggable(true)
-                            .setRecordable(true)
                             .build()
             );
         }
