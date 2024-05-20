@@ -68,8 +68,39 @@ enum class ThreadState : uint8_t {
   kSuspended,                       // RUNNABLE       TS_RUNNING   suspended by GC or debugger
 };
 
-//Android 9
-struct PartialRuntimeP {
+//https://cs.android.com/android/platform/superproject/+/android-5.0.0_r7.0.1:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-5.1.1_r38:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-6.0.0_r26:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-7.0.0_r36:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-7.1.0_r7:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-8.0.0_r51:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-8.1.0_r79:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-9.0.0_r61:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-10.0.0_r47:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-11.0.0_r48:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-12.0.0_r34:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:art/runtime/runtime.h
+//https://cs.android.com/android/platform/superproject/+/android-14.0.0_r37:art/runtime/runtime.h
+
+
+  //待测试6.0以下
+// APi   ~26
+//Android  5.0~8.0
+struct PartialRuntime5_8 {
+  void *thread_list_;
+
+  void *intern_table_;
+
+  void *class_linker_;
+
+  void *signal_catcher_;
+
+  std::string stack_trace_file_;
+
+  void *java_vm_;
+};
+//Android 8.1~9
+struct PartialRuntime8d1_9 {
   void *thread_list_;
 
   void *intern_table_;
@@ -86,11 +117,10 @@ struct PartialRuntimeP {
   std::string stack_trace_file_;
 
   void *java_vm_;
-
 };
 
 //Android 10
-struct PartialRuntimeQ {
+struct PartialRuntime10 {
   void *thread_list_;
 
   void *intern_table_;
@@ -102,9 +132,9 @@ struct PartialRuntimeQ {
   void *java_vm_;
 };
 
-//Android 11
+//Android 11~13
 //https://cs.android.com/android/platform/superproject/+/android-11.0.0_r40:art/runtime/runtime.h
-struct PartialRuntimeR {
+struct PartialRuntime11_12 {
   void *thread_list_;
 
   void *intern_table_;
@@ -120,7 +150,7 @@ struct PartialRuntimeR {
 };
 
 //Android 13~Android14
-struct PartialRuntimeTiramisu {
+struct PartialRuntime13_14 {
   void *thread_list_;
 
   void *intern_table_;

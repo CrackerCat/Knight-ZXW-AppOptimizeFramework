@@ -5,6 +5,8 @@
 #pragma once
 #include "base/primitive_types.h"
 namespace art {
+
+
 //23
 class ArtMethod_6 final {
  public:

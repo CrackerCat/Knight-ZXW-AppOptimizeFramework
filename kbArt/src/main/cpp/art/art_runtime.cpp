@@ -121,35 +121,35 @@ bool ArtRuntime::OnLoad(JavaVM *vm, JNIEnv *env, jclass java_class) {
   if (api_level_ >= ANDROID_TIRAMISU) {
     ArtRuntime::partialRuntime =
         reinterpret_cast<char *>(runtime) + offsetOfVmExt -
-            offsetof(PartialRuntimeTiramisu, java_vm_);
+            offsetof(PartialRuntime13_14, java_vm_);
     runtime_objects_.thread_list_ =
-        reinterpret_cast<PartialRuntimeTiramisu *>(ArtRuntime::partialRuntime)->thread_list_;
-    runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntimeTiramisu *>(ArtRuntime::partialRuntime)->class_linker_;
+        reinterpret_cast<PartialRuntime13_14 *>(ArtRuntime::partialRuntime)->thread_list_;
+    runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntime13_14 *>(ArtRuntime::partialRuntime)->class_linker_;
 
   } else if (api_level_ >= ANDROID_R) {
     ArtRuntime::partialRuntime =
         reinterpret_cast<char *>(runtime) + offsetOfVmExt -
-            offsetof(PartialRuntimeR, java_vm_);
-    runtime_objects_.thread_list_ = reinterpret_cast<PartialRuntimeR *>(ArtRuntime::partialRuntime)->thread_list_;
-    runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntimeTiramisu *>(ArtRuntime::partialRuntime)->class_linker_;
+            offsetof(PartialRuntime11_12, java_vm_);
+    runtime_objects_.thread_list_ = reinterpret_cast<PartialRuntime11_12 *>(ArtRuntime::partialRuntime)->thread_list_;
+    runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntime11_12 *>(ArtRuntime::partialRuntime)->class_linker_;
   } else if (api_level_ >= ANDROID_Q) {
     ArtRuntime::partialRuntime =
         reinterpret_cast<char *>(runtime) + offsetOfVmExt -
-            offsetof(PartialRuntimeQ, java_vm_);
-    runtime_objects_.thread_list_ = reinterpret_cast<PartialRuntimeQ *>(ArtRuntime::partialRuntime)->thread_list_;
-    runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntimeTiramisu *>(ArtRuntime::partialRuntime)->class_linker_;
-  } else if (api_level_ >= ANDROID_O_MR1) {
+            offsetof(PartialRuntime10, java_vm_);
+    runtime_objects_.thread_list_ = reinterpret_cast<PartialRuntime10 *>(ArtRuntime::partialRuntime)->thread_list_;
+    runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntime10 *>(ArtRuntime::partialRuntime)->class_linker_;
+  } else if (api_level_ >= ANDROID_O_MR1) { //27~28
     ArtRuntime::partialRuntime =
         reinterpret_cast<char *>(runtime) + offsetOfVmExt -
-            offsetof(PartialRuntimeP, java_vm_);
-    runtime_objects_.thread_list_ = reinterpret_cast<PartialRuntimeP *>(ArtRuntime::partialRuntime)->thread_list_;
-    runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntimeTiramisu *>(ArtRuntime::partialRuntime)->class_linker_;
-  } else {
+            offsetof(PartialRuntime8d1_9, java_vm_);
+    runtime_objects_.thread_list_ = reinterpret_cast<PartialRuntime8d1_9 *>(ArtRuntime::partialRuntime)->thread_list_;
+    runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntime8d1_9 *>(ArtRuntime::partialRuntime)->class_linker_;
+  } else if (api_level_ >=ANDROID_LOLLIPOP_MR1){
     //TODO 未验证的系统版本
-    return false;
+    runtime_objects_.thread_list_ = reinterpret_cast<PartialRuntime5_8 *>(ArtRuntime::partialRuntime)->thread_list_;
+    runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntime5_8 *>(ArtRuntime::partialRuntime)->class_linker_;
   }
 
-  LOGE("zxw","开始尝试获取偏移");
   //art_method init
   if (api_level_ >= ANDROID_S && api_level_ <= ANDROID_UPSIDE_DOWN_CAKE) {
     method_offset_.declaring_class_offset_ = offsetof(ArtMethod12_14, declaring_class_);
@@ -175,11 +175,7 @@ bool ArtRuntime::OnLoad(JavaVM *vm, JNIEnv *env, jclass java_class) {
   }
   //TODO 对偏移进行检查，如果偏移不准确，则认为该系统可能魔改后，位移不一致。
 
-  LOGE("zxw","获取偏移成功");
-
-
-
-  //art method offset init
+  LOGI("KbArt","kbArt初始化成功");
   return true;
 }
 

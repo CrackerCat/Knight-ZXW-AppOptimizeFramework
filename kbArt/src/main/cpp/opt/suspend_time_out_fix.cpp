@@ -44,7 +44,6 @@ void triggerSuspendTimeout() {
 }
 
 void proxyThreadSuspendTimeoutWarning(void *self, LogSeverity severity, const char *message, jobject peer) {
-  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, " threadSuspendTimeout catch success : %s", message);
 
   if (severity == FATAL && strcmp(message, SUSPEND_LOG_MSG) == 0) {
     // 如果当前是 FATAL 并且 message 是 Thread suspend timeout 则不调用原始函数,直接返回

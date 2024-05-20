@@ -31,7 +31,7 @@ Java_com_knightboost_test_SuspendTimeoutTest_callNativeThreadSuspendTimeout(JNIE
     void *child_thread = reinterpret_cast<void *>(native_peer);
     // only 14 worked for test.
     __android_log_print(ANDROID_LOG_INFO, "TEST", "thread_point : %p ,hookPointFunc address  %p", child_thread, targetFunc);
-    targetFunc(child_thread, WARNING, SUSPEND_LOG_MSG, target_thread);
+    targetFunc(child_thread, FATAL, SUSPEND_LOG_MSG, target_thread);
   } else {
     __android_log_print(ANDROID_LOG_ERROR, "TEST", "ELF symbol not found!!");
   }

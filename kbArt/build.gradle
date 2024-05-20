@@ -63,7 +63,6 @@ android {
 }
 
 dependencies {
-
     implementation("com.bytedance:bytehook:1.0.10")
     implementation("io.hexhacking:xdl:1.2.1")
     implementation 'com.bytedance.android:shadowhook:1.0.7'
@@ -73,3 +72,11 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 //apply plugin: "com.vanniktech.maven.publish"
+
+
+deploy {
+//    type "public"
+    name project.name
+    group POM_GROUP
+    version VERSION_NAME
+}
