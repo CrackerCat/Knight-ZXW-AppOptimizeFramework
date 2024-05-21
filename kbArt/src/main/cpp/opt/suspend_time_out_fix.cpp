@@ -112,6 +112,17 @@ Java_com_knightboost_sliver_Sliver_preventThreadSuspendTimeoutFatalLog(JNIEnv *e
                                           getThreadSuspendByPeerWarningFunctionName(),
                                           (void *) proxyThreadSuspendTimeoutWarning,
                                           (void **) &originalFunction);
+  if (stubFunction == nullptr){ //在线下测试中发现，部分Android 13的设备，实际符号不同,和Android 14的符号一样,待确认原因
+    int apiLevel = android_get_device_api_level();
+    if (apiLevel == 33) {
+      //SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_14
+      stubFunction = shadowhook_hook_sym_name("libart.so",
+                                              SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_14,
+                                              (void *) proxyThreadSuspendTimeoutWarning,
+                                              (void **) &originalFunction);
+    }
+
+  }
   if (stubFunction == nullptr) {
     const int err_num = shadowhook_get_errno();
     const char *errMsg = shadowhook_to_errmsg(err_num);

@@ -39,8 +39,7 @@ public class ArtThread {
         try {
             Field nativePeer = Thread.class.getDeclaredField("nativePeer");
             nativePeer.setAccessible(true);
-            long nativePeerValue = (long) nativePeer.get(thread);
-            return nativePeerValue;
+            return (long) nativePeer.get(thread);
         } catch (Exception e) {
             return -1;
         }

@@ -117,6 +117,7 @@ bool ArtRuntime::OnLoad(JavaVM *vm, JNIEnv *env, jclass java_class) {
     return false;
   }
 
+  LOGV("kbArt","api_level = %d ,offsetOfVmExt = %d",api_level_,offsetOfVmExt);
   //runtime offset init
   if (api_level_ >= ANDROID_TIRAMISU) {
     ArtRuntime::partialRuntime =
@@ -144,8 +145,10 @@ bool ArtRuntime::OnLoad(JavaVM *vm, JNIEnv *env, jclass java_class) {
             offsetof(PartialRuntime8d1_9, java_vm_);
     runtime_objects_.thread_list_ = reinterpret_cast<PartialRuntime8d1_9 *>(ArtRuntime::partialRuntime)->thread_list_;
     runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntime8d1_9 *>(ArtRuntime::partialRuntime)->class_linker_;
-  } else if (api_level_ >=ANDROID_LOLLIPOP_MR1){
-    //TODO 未验证的系统版本
+  } else if (api_level_ >=ANDROID_LOLLIPOP){
+    ArtRuntime::partialRuntime =
+        reinterpret_cast<char *>(runtime) + offsetOfVmExt -
+            offsetof(PartialRuntime5_8, java_vm_);
     runtime_objects_.thread_list_ = reinterpret_cast<PartialRuntime5_8 *>(ArtRuntime::partialRuntime)->thread_list_;
     runtime_objects_.class_linker_ =reinterpret_cast<PartialRuntime5_8 *>(ArtRuntime::partialRuntime)->class_linker_;
   }
@@ -173,9 +176,6 @@ bool ArtRuntime::OnLoad(JavaVM *vm, JNIEnv *env, jclass java_class) {
     method_offset_.declaring_class_offset_ = offsetof(ArtMethod_6, declaring_class_);
     method_offset_.access_flags_offset_ = offsetof(ArtMethod_6, access_flags_);
   }
-  //TODO 对偏移进行检查，如果偏移不准确，则认为该系统可能魔改后，位移不一致。
-
-  LOGI("KbArt","kbArt初始化成功");
   return true;
 }
 

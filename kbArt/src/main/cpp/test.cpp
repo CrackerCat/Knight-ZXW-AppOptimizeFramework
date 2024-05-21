@@ -25,7 +25,14 @@ Java_com_knightboost_test_SuspendTimeoutTest_callNativeThreadSuspendTimeout(JNIE
 
   auto targetFunc = (ThreadSuspendByPeerWarning) shadowhook_dlsym(handle,
                                                                   kbArt::getThreadSuspendByPeerWarningFunctionName());
-  __android_log_print(ANDROID_LOG_ERROR, "TEST", "_ZN3art3jit14JitCompileTask3RunEPNS_6ThreadE p1 = %p", targetFunc);
+  if (targetFunc == nullptr){ //已知部分Android 13符号 不同
+    int apiLevel = android_get_device_api_level();
+    if (apiLevel ==33){
+      //SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_14
+      targetFunc = (ThreadSuspendByPeerWarning) shadowhook_dlsym(handle,"_ZN3artL26ThreadSuspendByPeerWarningERNS_18ScopedObjectAccessEN7android4base11LogSeverityEPKcP8_jobject");
+    }
+  }
+  __android_log_print(ANDROID_LOG_ERROR, "TEST", "ThreadSuspendByPeerWarning address = %p", targetFunc);
 
   if (targetFunc != nullptr) {
     void *child_thread = reinterpret_cast<void *>(native_peer);

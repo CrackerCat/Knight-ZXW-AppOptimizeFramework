@@ -20,7 +20,7 @@
         android:id="@+id/btn_thread_stacktrace_test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="线程抓栈相关函数测试"
+        android:text="sliver异步获取主线程调用栈"
         />
 
     <androidx.appcompat.widget.AppCompatButton

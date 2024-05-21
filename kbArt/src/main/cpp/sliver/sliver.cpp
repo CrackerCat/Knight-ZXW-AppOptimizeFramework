@@ -19,22 +19,27 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
   auto* thread = reinterpret_cast<Thread *>(native_peer);
 
   bool timeOut;
-
   Thread *current_thread = Thread::Current();
 
   bool isSameThread = false;
   if (current_thread == thread){
     isSameThread = true;
   }
+  void* suspendThread = nullptr;
   if (!isSameThread){
     //TODO 判断是否超时
-    ArtRuntime::Get()->GetThreadList()->SuspendThreadByThreadId(thread->GetThreadId(),
+    suspendThread = ArtRuntime::Get()->GetThreadList()->SuspendThreadByThreadId(thread->GetThreadId(),
                                                          art::SuspendReason::kForUserCode,
                                                          &timeOut);
 
   }
 
-  
+  if (suspendThread == nullptr){
+    //suspend 失败，返回空数组
+    jlongArray result = env->NewLongArray(0);
+    return result;
+  }
+
   std::vector<std::uintptr_t> stack_methods;
   auto f = [](ArtMethod *method, void *visitorData) -> bool {
     auto *methods = reinterpret_cast<std::vector<std::uintptr_t> *>(visitorData);
@@ -46,15 +51,11 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
                             &stack_methods,
                             f);
   visitor.WalkStack(false);
-//  ArtRuntime::StackVisitorWalkStack(&visitor, false);
 
   if (!isSameThread){
+    LOGE("sliver"," thread = %p ,suspendThread = %p",thread,suspendThread);
     ArtRuntime::Get()->GetThreadList()->Resume(thread, art::SuspendReason::kForUserCode);
   }
-
-  std::vector<double> results(4);
-  jdoubleArray output = env->NewDoubleArray(4);
-  env->SetDoubleArrayRegion(output, 0, 4, &results[0]);
 
   jlongArray methodArray = env->NewLongArray((jsize) stack_methods.size());
 
@@ -71,7 +72,6 @@ JNIEXPORT jobjectArray JNICALL
 Java_com_knightboost_sliver_Sliver_prettyMethods(JNIEnv *env, jclass clazz, jlongArray methods) {
   jlong *methods_ptr = env->GetLongArrayElements(methods, nullptr);
   jsize size = env->GetArrayLength(methods);
-  //TODO cache StringClass
   jobjectArray ret = env->NewObjectArray(size, env->FindClass("java/lang/String"),
                                          nullptr);
 

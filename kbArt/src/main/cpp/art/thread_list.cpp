@@ -42,9 +42,7 @@ void *ThreadList::SuspendThreadByThreadId(uint32_t threadId,
   }
 
 }
-// 8.1 以上版本
 bool ThreadList::Resume(void *thread, SuspendReason suspendReason) {
-  //TODO 8.1以下版本做区分，其函数签名不一致
   static bool (*resume)(void *, void *, SuspendReason) = nullptr;
   if (resume == nullptr) {
     std::string symbol;
@@ -58,7 +56,6 @@ bool ThreadList::Resume(void *thread, SuspendReason suspendReason) {
                                        void *thread,
                                        SuspendReason suspendReason)>(findArtSoSym(
         symbol.c_str()));
-    LOGD("kbArt","resume thread %p",thread);
   }
   return resume(this, thread, suspendReason);
 }
