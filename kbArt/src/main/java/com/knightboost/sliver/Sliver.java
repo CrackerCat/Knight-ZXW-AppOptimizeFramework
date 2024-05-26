@@ -1,8 +1,6 @@
 package com.knightboost.sliver;
 
 
-import androidx.annotation.Keep;
-
 import com.bytedance.shadowhook.ShadowHook;
 import com.knightboost.artvm.KbArt;
 
@@ -33,13 +31,22 @@ public class Sliver {
      * @param callback
      */
     public static native void preventThreadSuspendTimeoutFatalLog(
-            HookSuspendThreadTimeoutCallback callback);
+            FixSuspendThreadTimeoutCallback callback);
 
     /**
-     * 监听suspend timeout
+     * 将目标线程 调用suspendThreadByPeer函数调用 替换成 byId调用
+     * @param targetThread
+     * @return
      */
-    @Keep
-    public static void onSuspendTimeout(){
+    public  static native void replaceThreadByPeerToById(Thread targetThread,
+                                                         FixSuspendThreadTimeoutCallback callback);
 
-    };
+    /**
+     * 将所有线程的suspendThreadByPeer函数调用 替换成 byId调用
+     * @param callback
+     */
+    public  static native void replaceThreadByPeerToByIdAll(
+            FixSuspendThreadTimeoutCallback callback);
+
+
 }

@@ -4,28 +4,31 @@
 #include <xdl.h>
 #include "art_thread.h"
 #include "art_xdl.h"
+#include "art_def.h"
 
 uint32_t art::Thread::GetThreadId() {
   static uint32_t offset = 0;
   if (offset == 0) {
     int api_level = android_get_device_api_level();
-    if (api_level >= 12) { // >=Android 12
-      offset = offsetof(tls_32bit_sized_values, thin_lock_thread_id);
-    } else if (api_level <= __ANDROID_API_Q__) { // <=Android 10
-      offset = offsetof(tls_32bit_sized_values_android10, thin_lock_thread_id);
-    }
+      if (api_level >= __ANDROID_API_R__) { // >=Android 12
+          offset = offsetof(tls_32bit_sized_values_12_14, thin_lock_thread_id);
+      } else if (api_level >= __ANDROID_API_L__) { // >=5.0 and <=Android 10
+          offset = offsetof(tls_32bit_sized_values_android_5_11, thin_lock_thread_id);
+      } else {
+          //TODO 未兼容
+      }
   }
   return *(uint32_t *) ((char *) this + offset);
 }
 
 uint32_t art::Thread::GetTid() {
-  static uint32_t offset = 0;
-  if (offset == 0) {
+  static uint32_t offset = -1;
+  if (offset == -1) {
     int api_level = android_get_device_api_level();
-    if (api_level >= 12) { // >=Android 12
-      offset = offsetof(tls_32bit_sized_values, tid);
-    } else if (api_level <= __ANDROID_API_Q__) { // <=Android 10
-      offset = offsetof(tls_32bit_sized_values_android10, tid);
+    if (api_level >= __ANDROID_API_R__) { // >=Android 12
+      offset = offsetof(tls_32bit_sized_values_12_14, tid);
+    } else if (api_level >= __ANDROID_API_L__) { // <=Android 10
+      offset = offsetof(tls_32bit_sized_values_android_5_11, tid);
     }
   }
   return *(uint32_t *) ((char *) this + offset);

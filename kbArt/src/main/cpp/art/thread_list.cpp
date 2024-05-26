@@ -11,9 +11,10 @@ void *ThreadList::SuspendThreadByThreadId(uint32_t threadId,
                                           SuspendReason suspendReason,
                                           bool *timed_out) {
 
+
   static void *(*suspend_thread_by_thread_id)(void *,
                                               uint32_t,
-                                              uint8_t,
+                                              SuspendReason,
                                               bool *) = nullptr;
   if (suspend_thread_by_thread_id == nullptr) {
     std::string symbol;
@@ -23,24 +24,15 @@ void *ThreadList::SuspendThreadByThreadId(uint32_t threadId,
     } else {
       symbol = "_ZN3art10ThreadList23SuspendThreadByThreadIdEjbPb";
     }
-
     suspend_thread_by_thread_id =
         reinterpret_cast<void *(*)(void *,
                                    uint32_t,
-                                   uint8_t,
+                                   SuspendReason,
                                    bool *)>(findArtSoSym(
             symbol.c_str()));
-    if (suspend_thread_by_thread_id == nullptr) {
-      LOGE("kbArt", "suspend_thread_by_thread_id func is null");
-    } else {
-      LOGE("kbArt",
-           "函数不为空 suspend_thread_by_thread_id func is %p",
-           suspend_thread_by_thread_id);
-    }
-    //
-    return suspend_thread_by_thread_id(this, threadId, (uint8_t) 0, timed_out);
   }
-
+  //
+  return suspend_thread_by_thread_id(this, threadId, suspendReason, timed_out);
 }
 bool ThreadList::Resume(void *thread, SuspendReason suspendReason) {
   static bool (*resume)(void *, void *, SuspendReason) = nullptr;

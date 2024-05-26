@@ -13,7 +13,11 @@ extern "C" {
 #define LOGW(tag, fmt, ...) __android_log_print(ANDROID_LOG_WARN, tag, fmt, ##__VA_ARGS__)
 #define LOGE(tag, fmt, ...) __android_log_print(ANDROID_LOG_ERROR, tag, fmt, ##__VA_ARGS__)
 #define LOGF(tag, fmt, ...) __android_log_print(ANDROID_LOG_FATAL, tag, fmt, ##__VA_ARGS__)
-
+#ifdef ENABLE_LOGT
+#define LOGT(tag, fmt, ...) __android_log_print(ANDROID_LOG_ERROR, tag, fmt, ##__VA_ARGS__)
+#else
+#define LOGT(tag, fmt, ...)
+#endif
 
 #ifdef __cplusplus
 }

@@ -27,14 +27,12 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
   }
   void* suspendThread = nullptr;
   if (!isSameThread){
-    //TODO 判断是否超时
     suspendThread = ArtRuntime::Get()->GetThreadList()->SuspendThreadByThreadId(thread->GetThreadId(),
                                                          art::SuspendReason::kForUserCode,
                                                          &timeOut);
-
   }
 
-  if (suspendThread == nullptr){
+  if (suspendThread == nullptr && !isSameThread){ //suspend 失败，只有超时的情况下会出现
     //suspend 失败，返回空数组
     jlongArray result = env->NewLongArray(0);
     return result;
@@ -52,9 +50,8 @@ Java_com_knightboost_sliver_Sliver_nativeGetMethodStackTrace(JNIEnv *env,
                             f);
   visitor.WalkStack(false);
 
-  if (!isSameThread){
-    LOGE("sliver"," thread = %p ,suspendThread = %p",thread,suspendThread);
-    ArtRuntime::Get()->GetThreadList()->Resume(thread, art::SuspendReason::kForUserCode);
+  if (!isSameThread) {
+     ArtRuntime::Get()->GetThreadList()->Resume(thread, art::SuspendReason::kForUserCode);
   }
 
   jlongArray methodArray = env->NewLongArray((jsize) stack_methods.size());

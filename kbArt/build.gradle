@@ -73,7 +73,7 @@ dependencies {
 }
 
 version = VERSION_NAME
-apply plugin: "com.vanniktech.maven.publish"
+//apply plugin: "com.vanniktech.maven.publish"
 //deploy {
 ////    type "public"
 //    name project.name

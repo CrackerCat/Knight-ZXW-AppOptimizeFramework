@@ -2,22 +2,19 @@ package com.knightboost.appoptimizeframework
 
 import android.content.Context
 import android.content.Intent
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.util.Log
 import android.view.LayoutInflater
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.knightboost.appoptimizeframework.databinding.ActivitySliverTestBinding
 import com.knightboost.artvm.ArtThread
-import com.knightboost.artvm.KbArt
-import com.knightboost.sliver.HookSuspendThreadTimeoutCallback
+import com.knightboost.sliver.FixSuspendThreadTimeoutCallback
 import com.knightboost.sliver.Sliver
 import com.knightboost.test.SuspendTimeoutTest
-import java.lang.StringBuilder
-import java.util.HexFormat
+import kotlin.text.StringBuilder
 
 class SliverTestActivity : AppCompatActivity() {
 
@@ -36,31 +33,53 @@ class SliverTestActivity : AppCompatActivity() {
         binding = ActivitySliverTestBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.main)
 
-        binding.btnThreadStacktraceTest.setOnClickListener {
 
+
+        binding.btnThreadStacktraceTest.setOnClickListener {
             Thread {
-//                Log.e(
-//                    "zxw", "开始获取主线程调用栈,主线程 threadId = ${mainThreadTid}" +
-//                            " tid = ${ArtThread.getTid(Looper.getMainLooper().thread)}"
-//                )
-//                var nativePeer = ArtThread.suspendThreadByThreadId(mainThreadTid)
-//                if (nativePeer == -1L) {
-//                    Log.e("zxw", "暂停主线程失败")
-//                    return@Thread
-//                } else {
-//                    Log.e(
-//                        "zxw", "native peer = ${nativePeer} ,自己获取的nativePeer = ${
-//                            ArtThread.getNativePeer(Looper.getMainLooper().thread)
-//                        }"
-//                    )
-//                }
-//                val stackTrace = Looper.getMainLooper().thread.stackTrace
-//                ArtThread.resumeThread(nativePeer)
-                Sliver.nativeGetMethodStackTrace(
+                val nativeGetMethodStackTrace = Sliver.nativeGetMethodStackTrace(
                     ArtThread.getNativePeer(Looper.getMainLooper().thread)
                 )
+                val prettyMethods = Sliver.prettyMethods(nativeGetMethodStackTrace)
+                val stackBuilder = StringBuilder()
+                for (method in prettyMethods) {
+                    stackBuilder.append(method).append("\n")
+                }
+                Log.e("sliver","stack is $stackBuilder")
             }.start()
+        }
 
+
+
+        binding.btnReplaceSuspendMethod.setOnClickListener {
+            Sliver.testBuildInUnReachable();
+//            val thread = Thread (){
+//                while (true){
+//                    Thread.sleep(1000L)
+//                    val stackTrace = Looper.getMainLooper().thread.stackTrace
+//                }
+//            }
+//            thread.name ="sampleThread"
+//            thread.start()
+//            Sliver.replaceThreadByPeerToById(thread,object :ReplaceSuspendThreadMethodCallback{
+//                override fun onReplaceSuccess() {
+//                    Log.e("sliver","函数替换成功")
+//                }
+//
+//                override fun onError(error: String?) {
+//                    Log.e("sliver","函数替换失败 $error")
+//
+//                }
+//            })
+//
+//            val thread2 = Thread (){
+//                while (true){
+//                    Thread.sleep(1000L)
+//                    val stackTrace = Looper.getMainLooper().thread.stackTrace
+//                }
+//            }
+//            thread2.name ="sampleThread2"
+//            thread2.start()
         }
 
         binding.btnTestGetThreadCpuTime.setOnClickListener {
@@ -70,39 +89,44 @@ class SliverTestActivity : AppCompatActivity() {
         }
 
         binding.btnSuspendTimeoutCase.setOnClickListener {
-            //主线程模拟死循环，进入不可
-            Handler(Looper.getMainLooper()).postDelayed( {
-            },100)
-            //异步线程测试是否会出现 timeout
+            Sliver.preventThreadSuspendTimeoutFatalLog(object : FixSuspendThreadTimeoutCallback {
+                override fun triggerSuspendTimeout() {
+                    Log.e("sliver","系统触发了timeout")
+                    Handler(Looper.getMainLooper()).post {
+                        Toast.makeText(this@SliverTestActivity,"系统触发了timeout",Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onError(error: String?) {
+                    Toast.makeText(this@SliverTestActivity,"error "+error,Toast.LENGTH_SHORT).show()
+                }
+            })
             Thread {
-//                while (true) {
-                    Thread.sleep(50)
-
-
-//                    Log.e("zxw", "获取主线程调用栈成功耗时 ${(b1-b0)/1000} 微秒")
-//                }
-
+                SuspendTimeoutTest.callNativeThreadSuspendTimeout(Thread.currentThread(),ArtThread.getNativePeer(Thread.currentThread()));
             }.start()
         }
 
-        Sliver.preventThreadSuspendTimeoutFatalLog(object :HookSuspendThreadTimeoutCallback{
-            override fun triggerSuspendTimeout() {
-                Log.e("sliver","系统触发了timeout")
-            }
 
-            override fun onError(error: String?) {
-                Log.e("sliver","preventThreadSuspendTimeoutFatal error")
-            }
-        })
         binding.btnSuspendMainThread.setOnClickListener {
-
             Thread {
-                while (true){
-                    Thread.sleep(1000)
-                    SuspendTimeoutTest.callNativeThreadSuspendTimeout(Thread.currentThread(),ArtThread.getNativePeer(Thread.currentThread()));
+                Log.e(
+                    "zxw", "开始获取主线程调用栈,主线程 threadId = ${mainThreadTid}" +
+                            " tid = ${ArtThread.getTid(Looper.getMainLooper().thread)}"
+                )
+                var nativePeer = ArtThread.suspendThreadByThreadId(mainThreadTid)
+                if (nativePeer == -1L) {
+                    Log.e("zxw", "暂停主线程失败")
+                    return@Thread
+                } else {
+                    Log.e(
+                        "zxw", "native peer = ${nativePeer} ,自己获取的nativePeer = ${
+                            ArtThread.getNativePeer(Looper.getMainLooper().thread)
+                        }"
+                    )
                 }
+                val stackTrace = Looper.getMainLooper().thread.stackTrace
+                ArtThread.resumeThread(nativePeer)
             }.start()
-
 
         }
 

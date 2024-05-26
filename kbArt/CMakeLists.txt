@@ -11,8 +11,11 @@ cmake_minimum_required(VERSION 3.18.1)
 project(kbArt)
 
 set(CMAKE_CXX_STANDARD 17)
-
-
+#TODO 打生产包时，应该关闭
+option(ENABLE_LOGT "Enable LOGT function" ON)
+if(ENABLE_LOGT)
+    add_definitions(-DENABLE_LOGT)
+endif()
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
