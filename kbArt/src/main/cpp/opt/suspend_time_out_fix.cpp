@@ -7,6 +7,12 @@
 #include "shadowhook.h"
 #include "kbart_jni.h"
 #include "logger.h"
+#include <vector>
+#include "unordered_set"
+#include <thread>
+#include <mutex>
+#include "shared_mutex"
+#include "art_def.h"
 namespace kbArt {
 using namespace art;
 #define TARGET_ART_LIB "libart.so"
@@ -17,7 +23,7 @@ using namespace art;
 #define SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_6_7 "_ZN3artL26ThreadSuspendByPeerWarningEPNS_6ThreadENS_11LogSeverityEPKcP8_jobject"
 #define SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_5 "_ZN3artL26ThreadSuspendByPeerWarningEPNS_6ThreadEiPKcP8_jobject"
 
-#define SYMBOL_THREAD_SUSPEND_BY_PEER_API_32_34 "_ZN3art10ThreadList19SuspendThreadByPeerEP8_jobjectNS_13SuspendReasonEPb"
+#define SYMBOL_THREAD_SUSPEND_BY_PEER_API_31_34 "_ZN3art10ThreadList19SuspendThreadByPeerEP8_jobjectNS_13SuspendReasonEPb"
 
 //8.1~14
 #define SYMBOL_THREAD_SUSPEND_BY_THREAD_ID_API_26_34 "_ZN3art10ThreadList23SuspendThreadByThreadIdEjNS_13SuspendReasonEPb"
@@ -26,20 +32,24 @@ using namespace art;
 typedef void (*ThreadSuspendByPeerWarning)(void *self, LogSeverity severity,
                                            const char *message, jobject peer); // 函数指针类型定义
 
-typedef void* (*ThreadSuspendByThreadId)(void *threadList,  uint32_t,
-                                        SuspendReason,
-                                        bool *); // 函数指针类型定义
+typedef void *(*ThreadSuspendByThreadId)(void *threadList, uint32_t,
+                                         SuspendReason,
+                                         bool *); // 函数指针类型定义
 
-static int apiLevel = android_get_device_api_level();
-static uint32_t replaceSuspendTargetThreadId = -1;
+static std::unordered_set<uint32_t> protectedThreadIdSet; // 共享的数据
+std::shared_mutex  idVectorMutext;
+static bool replaceSuspendMethodForAll = false;
 
-
-jobject hookThreadSuspendByPeerWarningCallbackObj = nullptr; // 全局引用，指向Java层的监听回调对象
+jobject javaCallbackObject = nullptr; // 全局引用，指向Java层的监听回调对象
 void *originalThreadSuspendByPeerWarning = nullptr; // 指向原始函数的指针
 void *threadSuspendByPeerWarningHookStub = nullptr; // 指向存根函数的指针
 
 ThreadSuspendByThreadId thread_suspend_by_thread_id = nullptr;
 
+static jfieldID nativePeerFieldId = nullptr;
+
+void *originalSuspendThreadByPeer = nullptr; // 指向原始函数的指针
+void *proxySuspendThreadByPeerStub = nullptr;
 
 const char *getThreadSuspendByPeerWarningFunctionName() {
   // Simplified logic based on Android API levels
@@ -61,12 +71,10 @@ const char *getThreadSuspendByPeerSymbol() {
 //  if (apiLevel <= 34 && apiLevel >= 32) { //12.1~14
 //    return SYMBOL_THREAD_SUSPEND_BY_PEER_API_32_34;
 //  }
-
-  return SYMBOL_THREAD_SUSPEND_BY_PEER_API_32_34;
-
+  return SYMBOL_THREAD_SUSPEND_BY_PEER_API_31_34;
 }
 
-const char* getThreadSuspendThreadByThreadIdSymbol(){
+const char *getThreadSuspendThreadByThreadIdSymbol() {
   if (apiLevel <= 34 && apiLevel > 26) { //12.1~14
     return SYMBOL_THREAD_SUSPEND_BY_THREAD_ID_API_26_34;
   } else {
@@ -74,7 +82,6 @@ const char* getThreadSuspendThreadByThreadIdSymbol(){
   }
 }
 
-void triggerSuspendTimeout();
 //通知Java层观察者，出现suspendTimeout异常
 void triggerSuspendTimeout() {
   // 触发挂起超时处理
@@ -83,12 +90,12 @@ void triggerSuspendTimeout() {
     return;
   }
   jclass jThreadHookClass = pEnv->FindClass(
-      "com/knightboost/sliver/FixSuspendThreadTimeoutCallback");
+      "com/knightboost/optimize/FixSuspendThreadTimeoutCallback");
   if (jThreadHookClass != nullptr) {
     jmethodID jMethodId = pEnv->GetMethodID(jThreadHookClass, "triggerSuspendTimeout",
                                             "()V");
     if (jMethodId != nullptr) {
-      pEnv->CallVoidMethod(hookThreadSuspendByPeerWarningCallbackObj, jMethodId);
+      pEnv->CallVoidMethod(javaCallbackObject, jMethodId);
     }
   }
 }
@@ -114,173 +121,165 @@ void proxyThreadSuspendTimeoutWarning(void *self, LogSeverity severity, const ch
   }
 }
 
-
-
-
-static jfieldID nativePeerFieldId = nullptr;
-
-void *originalSuspendThreadByPeer = nullptr; // 指向原始函数的指针
-void *proxySuspendThreadByPeerStub = nullptr;
 void *proxySuspendThreadByPeer(void *thread_list,
                                jobject peer,
                                SuspendReason suspendReason,
                                bool *timed_out) {
   SHADOWHOOK_STACK_SCOPE();
-  LOGE("sliver", "proxySuspendThreadByPeer, currentThread is %p ,peer is %p  suspendReason= %hhb",Thread::Current(), peer, suspendReason);
   //调用原函数
-  uint32_t currentThreadId = Thread::Current()->GetThreadId();
-  if (currentThreadId == replaceSuspendTargetThreadId){ //是目标线程替换为suspendThreadById
+  if (replaceSuspendMethodForAll){
+    //直接替换
     jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
     uint32_t targetThreadId = ((Thread *) nativePeer)->GetThreadId();
-    LOGT("sliver","目标线程threadId为 %d",targetThreadId);
-    return thread_suspend_by_thread_id(thread_list,targetThreadId,suspendReason,timed_out);
-  } else{ //非目标线程，直接调用原函数
-    void *thread  =SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer, thread_list, peer, suspendReason, timed_out);
-    LOGT("sliver", "当前线程为非目标保护线程， Hook 返回thread指针地址 %p,当前线程threadId 为%d",
-         thread, currentThreadId);
-    return thread;
-  }
-
-}
-
-
-
-/**
- * 防止目标线程调用suspend异常
- */
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_knightboost_sliver_Sliver_preventThreadSuspendTimeoutFatalLog(JNIEnv *env,
-                                                                       jclass clazz, jobject callback) {
-  // 只支持Android API 31以下 ,由于Android 12.1 在Fatal 日志后添加了  UNREACHABLE ，因此只进行该函数Hook没有作用
-  if (apiLevel >= 31) {
-    LOGW("sliver", "preventThreadSuspendTimeoutFatalLog doesn't support on android api %d", apiLevel);
-    return;
-  }
-  if (hookThreadSuspendByPeerWarningCallbackObj != nullptr) {
-    env->DeleteGlobalRef(hookThreadSuspendByPeerWarningCallbackObj);
-  }
-  hookThreadSuspendByPeerWarningCallbackObj = env->NewGlobalRef(callback);
-
-  // 如果已经调用Hook过 取消之前的hook
-  if (threadSuspendByPeerWarningHookStub != nullptr) {
-    shadowhook_unhook(threadSuspendByPeerWarningHookStub);
-    threadSuspendByPeerWarningHookStub = nullptr;
-  }
-  threadSuspendByPeerWarningHookStub = shadowhook_hook_sym_name("libart.so",
-                                                                getThreadSuspendByPeerWarningFunctionName(),
-                                                                (void *) proxyThreadSuspendTimeoutWarning,
-                                                                (void **) &originalThreadSuspendByPeerWarning);
-  if (threadSuspendByPeerWarningHookStub == nullptr) { //在线下测试中发现，部分Android 13的设备，实际符号不同,和Android 14的符号一样,待确认原因
-    int apiLevel = android_get_device_api_level();
-    if (apiLevel == 33) {
-      //SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_14
-      threadSuspendByPeerWarningHookStub = shadowhook_hook_sym_name("libart.so",
-                                                                    SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_14,
-                                                                    (void *) proxyThreadSuspendTimeoutWarning,
-                                                                    (void **) &originalThreadSuspendByPeerWarning);
-    }
-
-  }
-  if (threadSuspendByPeerWarningHookStub == nullptr) {
-    const int err_num = shadowhook_get_errno();
-    const char *errMsg = shadowhook_to_errmsg(err_num);
-    if (errMsg == nullptr || hookThreadSuspendByPeerWarningCallbackObj == nullptr) {
-      return;
-    }
-    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Hook setup failed: %s", errMsg);
-
-    // 处理钩子设置失败的情况
-    jclass jThreadHookClass = env->FindClass(
-        "com/knightboost/sliver/FixSuspendThreadTimeoutCallback");
-    if (jThreadHookClass != nullptr) {
-      jmethodID jMethodId = env->GetMethodID(jThreadHookClass, "onError",
-                                             "(Ljava/lang/String;)V");
-      if (jMethodId != nullptr) {
-        env->CallVoidMethod(hookThreadSuspendByPeerWarningCallbackObj, jMethodId, env->NewStringUTF(errMsg));
-      }
-    }
-    //cleanup
-    if (hookThreadSuspendByPeerWarningCallbackObj) {
-      env->DeleteGlobalRef(hookThreadSuspendByPeerWarningCallbackObj);
-      hookThreadSuspendByPeerWarningCallbackObj = nullptr;
-    }
+//    LOGT("sliver", "替换线程  suspendThreadByThreadId,目标线程threadId为 %d", targetThreadId);
+    return thread_suspend_by_thread_id(thread_list, targetThreadId, suspendReason, timed_out);
   } else {
-    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Hook setup success");
+    uint32_t currentThreadId = Thread::Current()->GetThreadId();
+    std::shared_lock<std::shared_mutex> lock(idVectorMutext);
+    if (protectedThreadIdSet.find(currentThreadId) != protectedThreadIdSet.end()){
+      lock.unlock();
+      jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
+      uint32_t targetThreadId = ((Thread *) nativePeer)->GetThreadId();
+//      LOGT("sliver", "替换 目标线程 suspendThreadByThreadId,目标线程threadId为 %d", targetThreadId);
+
+      return thread_suspend_by_thread_id(thread_list, targetThreadId, suspendReason, timed_out);
+    } else{
+      lock.unlock();
+      //调用原函数
+      void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer, thread_list, peer, suspendReason, timed_out);
+      return thread;
+    }
+
   }
+
+
 }
 
 
+
+using namespace kbArt;
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_knightboost_sliver_Sliver_replaceThreadByPeerToById(JNIEnv *env, jclass clazz, jobject target_thread, jobject callback) {
-  if (nativePeerFieldId == nullptr) {
-    jclass threadClass = env->FindClass("java/lang/Thread");  // Find the Java Thread class.
-    if (threadClass == nullptr) {
-      //never happen
-      return;
-    }
-    nativePeerFieldId = env->GetFieldID(threadClass, "nativePeer", "J");
-  }
-
+Java_com_knightboost_optimize_SuspendTimeoutFixer_preventThreadSuspendTimeoutFatalLog(JNIEnv *env,
+                                                                                      jobject thiz,
+                                                                                      jboolean replace_suspend_by_peer_to_thread_id_for_all_thread,
+                                                                                      jobject callback) {
+  // 处理钩子设置失败的情况
   jclass jThreadHookClass = env->FindClass(
-      "com/knightboost/sliver/FixSuspendThreadTimeoutCallback");
+      "com/knightboost/optimize/FixSuspendThreadTimeoutCallback");
+  jmethodID onErrorMethodId = env->GetMethodID(jThreadHookClass, "onError",
+                                               "(Ljava/lang/String;)V");
 
-  
-  void *handle = shadowhook_dlopen("libart.so");
-  thread_suspend_by_thread_id =  (ThreadSuspendByThreadId)shadowhook_dlsym(handle, getThreadSuspendThreadByThreadIdSymbol());
-  if (thread_suspend_by_thread_id == nullptr){
-    jmethodID jMethodId = env->GetMethodID(jThreadHookClass, "onError",
-                                           "(Ljava/lang/String;)V");
-    if (jMethodId != nullptr) {
-      env->CallVoidMethod(callback, jMethodId, env->NewStringUTF("thread_suspend_by_thread_id 符号未找到"));
+  jclass threadClass = env->FindClass("java/lang/Thread");  // Find the Java Thread class.
+  nativePeerFieldId = env->GetFieldID(threadClass,"nativePeer","J");
+
+  if (javaCallbackObject != nullptr) {
+    env->DeleteGlobalRef(javaCallbackObject);
+    //调用过，只在开发环境中会出现，进行资源清理操作
+    replaceSuspendMethodForAll = false;
+    if (proxySuspendThreadByPeerStub!= nullptr){
+      shadowhook_unhook(proxySuspendThreadByPeerStub);
     }
 
+    if (threadSuspendByPeerWarningHookStub!= nullptr){
+      shadowhook_unhook(threadSuspendByPeerWarningHookStub);
+    }
   }
+  javaCallbackObject = env->NewGlobalRef(callback);
 
-  jlong nativePeerValue = env->GetLongField(target_thread, nativePeerFieldId);
+  if (apiLevel>34){
+    env->CallVoidMethod(callback,onErrorMethodId,env->NewStringUTF("api 版本 >暂未兼容"));
+  }else if (apiLevel >= 31 && apiLevel <= 34) {
+    //31以上 使用替换 suspendThreadByPeer 的方式
+    replaceSuspendMethodForAll = replace_suspend_by_peer_to_thread_id_for_all_thread;
 
-  auto* thread = reinterpret_cast<Thread *>(nativePeerValue);
-  uint32_t threadId = thread->GetThreadId();
-
-  if (proxySuspendThreadByPeerStub != nullptr) {
-    //已经替换过了，直接记录目标线程
-    //TODO 添加数组
-    jmethodID jMethodId = env->GetMethodID(jThreadHookClass, "hookSuspendThreadByIdSuccess",
-                                           "()V");
-    if (jMethodId != nullptr) {
-      env->CallVoidMethod(callback, jMethodId);
+    void *handle = shadowhook_dlopen("libart.so");
+    thread_suspend_by_thread_id = (ThreadSuspendByThreadId) shadowhook_dlsym(handle, getThreadSuspendThreadByThreadIdSymbol());
+    shadowhook_dlclose(handle);
+    if (thread_suspend_by_thread_id == nullptr) {
+      env->CallVoidMethod(callback, onErrorMethodId, env->NewStringUTF("thread_suspend_by_thread_id 符号未找到"));
+      return;
     }
-  } else {
-    //TODO 添加数组
+
     proxySuspendThreadByPeerStub = shadowhook_hook_sym_name("libart.so", getThreadSuspendByPeerSymbol(),
                                                             (void *) proxySuspendThreadByPeer,
                                                             &originalSuspendThreadByPeer);
     if (proxySuspendThreadByPeerStub == nullptr) {
       const int err_num = shadowhook_get_errno();
       const char *errMsg = shadowhook_to_errmsg(err_num);
-      jmethodID jMethodId = env->GetMethodID(jThreadHookClass, "onError",
-                                             "(Ljava/lang/String;)V");
-      if (jMethodId != nullptr) {
-        env->CallVoidMethod(callback, jMethodId, env->NewStringUTF(errMsg));
-      }
+      env->CallVoidMethod(callback, onErrorMethodId, env->NewStringUTF(errMsg));
     } else {
       //Hook成功
-      replaceSuspendTargetThreadId = threadId;
       jmethodID jMethodId = env->GetMethodID(jThreadHookClass, "hookSuspendThreadByIdSuccess",
                                              "()V");
       if (jMethodId != nullptr) {
         env->CallVoidMethod(callback, jMethodId);
       }
-    }
 
+    }
+  } else {
+    //31以下替换 suspendThreadByPeerWarning日志级别的方式
+    // 如果已经调用Hook过 取消之前的hook
+    if (threadSuspendByPeerWarningHookStub != nullptr) {
+      shadowhook_unhook(threadSuspendByPeerWarningHookStub);
+      threadSuspendByPeerWarningHookStub = nullptr;
+    }
+    threadSuspendByPeerWarningHookStub = shadowhook_hook_sym_name("libart.so",
+                                                                  getThreadSuspendByPeerWarningFunctionName(),
+                                                                  (void *) proxyThreadSuspendTimeoutWarning,
+                                                                  (void **) &originalThreadSuspendByPeerWarning);
+    if (threadSuspendByPeerWarningHookStub == nullptr) {
+      const int err_num = shadowhook_get_errno();
+      const char *errMsg = shadowhook_to_errmsg(err_num);
+      if (errMsg == nullptr || javaCallbackObject == nullptr) {
+        //should never happen
+        return;
+      }
+      __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Hook setup failed: %s", errMsg);
+      env->CallVoidMethod(javaCallbackObject, onErrorMethodId, env->NewStringUTF(errMsg));
+      //cleanup
+      if (javaCallbackObject) {
+        env->DeleteGlobalRef(javaCallbackObject);
+        javaCallbackObject = nullptr;
+      }
+    } else {
+      __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Hook setup success");
+      jmethodID hookSuspendThreadByPeerWarningSuccessMethodId = env->GetMethodID(jThreadHookClass,
+                                                                                 "hookSuspendThreadByPeerWarningSuccess", "()V");
+      env->CallVoidMethod(callback, hookSuspendThreadByPeerWarningSuccessMethodId);
+
+    }
+  }
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_knightboost_optimize_SuspendTimeoutFixer_addThread(JNIEnv *env, jobject thiz, jobject targetThread) {
+  std::unique_lock<std::shared_mutex> lock(idVectorMutext);
+  // getThreadId
+  if (nativePeerFieldId == nullptr){
+    jclass threadClass = env->FindClass("java/lang/Thread");  // Find the Java Thread class.
+    nativePeerFieldId = env->GetFieldID(threadClass,"nativePeer","J");
   }
 
+  jlong nativePeerValue = env->GetLongField(targetThread, nativePeerFieldId);
+  auto *thread = reinterpret_cast<Thread *>(nativePeerValue);
+  uint32_t threadId = thread->GetThreadId();
+  protectedThreadIdSet.insert(threadId);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_knightboost_sliver_Sliver_replaceThreadByPeerToByIdAll(JNIEnv *env, jclass clazz, jobject callback) {
+Java_com_knightboost_optimize_SuspendTimeoutFixer_removeThread(JNIEnv *env, jobject thiz, jobject targetThread) {
+  if (nativePeerFieldId == nullptr){
+    jclass threadClass = env->FindClass("java/lang/Thread");  // Find the Java Thread class.
+    nativePeerFieldId = env->GetFieldID(threadClass,"nativePeer","J");
+  }
+  std::unique_lock<std::shared_mutex> lock(idVectorMutext);
+  jlong nativePeerValue = env->GetLongField(targetThread, nativePeerFieldId);
+  auto *thread = reinterpret_cast<Thread *>(nativePeerValue);
+//  LOGE("sliver","目标线程 nativePeerValue = %ld",nativePeerValue);
+  uint32_t threadId = thread->GetThreadId();
+  protectedThreadIdSet.erase(threadId);
+}
 }
 
-}

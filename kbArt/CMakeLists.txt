@@ -45,6 +45,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/art_thread_jni.cpp
         src/main/cpp/art_jni.cpp
         src/main/cpp/test.cpp
+        src/main/cpp/opt/android_14_debuggable_bug_fixer.cpp
         src/main/cpp/opt/suspend_time_out_fix.cpp
         )
 

@@ -1,10 +1,22 @@
 package com.knightboost.artvm;
 
+import com.bytedance.shadowhook.ShadowHook;
+
 public class KbArt {
     private static boolean inited = false;
 
     static {
         loadSo();
+    }
+
+    public synchronized static void initShadowHook(){
+        if (ShadowHook.getInitErrno() == 2){ //如果未初始化则执行初始化
+            ShadowHook.init(
+                    new ShadowHook.ConfigBuilder()
+                            .setMode(ShadowHook.Mode.SHARED)
+                            .build()
+            );
+        }
     }
 
     public static void loadSo(){

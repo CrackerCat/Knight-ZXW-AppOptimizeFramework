@@ -27,14 +27,20 @@
         android:id="@+id/btn_suspend_timeout_case"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="获取调用栈防止suspendTimeOut"
+        android:text="获取调用栈防止suspendTimeOut(all)"
         />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btn_replace_suspend_method"
+        android:id="@+id/btn_suspend_timeout_case2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="替换suspend函数测试"
+        android:text="获取调用栈防止suspendTimeOut(target)"
+        />
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_remove_protected_thread"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="移除保护线程"
         />
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_suspend_main_thread"

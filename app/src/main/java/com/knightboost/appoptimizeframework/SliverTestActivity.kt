@@ -2,6 +2,7 @@ package com.knightboost.appoptimizeframework
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,12 +12,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.knightboost.appoptimizeframework.databinding.ActivitySliverTestBinding
 import com.knightboost.artvm.ArtThread
-import com.knightboost.sliver.FixSuspendThreadTimeoutCallback
+import com.knightboost.optimize.FixSuspendThreadTimeoutCallback
+import com.knightboost.optimize.SuspendTimeoutFixer
 import com.knightboost.sliver.Sliver
 import com.knightboost.test.SuspendTimeoutTest
 import kotlin.text.StringBuilder
 
-class SliverTestActivity : AppCompatActivity() {
+class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback {
 
     companion object{
         fun start(context: Context){
@@ -32,8 +34,13 @@ class SliverTestActivity : AppCompatActivity() {
 //        setContentView(R.layout.activity_sliver_test)
         binding = ActivitySliverTestBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.main)
-
-
+        val targetThread = Thread {
+            while (true) {
+                Thread.sleep(50)
+                val stackTrace = Looper.getMainLooper().thread.stackTrace
+            }
+        }
+        targetThread.start()
 
         binding.btnThreadStacktraceTest.setOnClickListener {
             Thread {
@@ -45,66 +52,42 @@ class SliverTestActivity : AppCompatActivity() {
                 for (method in prettyMethods) {
                     stackBuilder.append(method).append("\n")
                 }
-                Log.e("sliver","stack is $stackBuilder")
+                showMsg("sliver 测试成功")
             }.start()
         }
 
+        binding.btnSuspendTimeoutCase.setOnClickListener {
+            SuspendTimeoutFixer.preventThreadSuspendTimeoutFatalLog(true,this)
+            if (Build.VERSION.SDK_INT<31){//模拟Timeout
+                Thread {
+                    SuspendTimeoutTest.callNativeThreadSuspendTimeout(Thread.currentThread(),ArtThread.getNativePeer(Thread.currentThread()));
+                }.start()
+            }
+        }
 
+        binding.btnRemoveProtectedThread.setOnClickListener {
+            SuspendTimeoutFixer.removeThread(targetThread)
+        }
 
-        binding.btnReplaceSuspendMethod.setOnClickListener {
-            Sliver.testBuildInUnReachable();
-//            val thread = Thread (){
-//                while (true){
-//                    Thread.sleep(1000L)
-//                    val stackTrace = Looper.getMainLooper().thread.stackTrace
-//                }
-//            }
-//            thread.name ="sampleThread"
-//            thread.start()
-//            Sliver.replaceThreadByPeerToById(thread,object :ReplaceSuspendThreadMethodCallback{
-//                override fun onReplaceSuccess() {
-//                    Log.e("sliver","函数替换成功")
-//                }
-//
-//                override fun onError(error: String?) {
-//                    Log.e("sliver","函数替换失败 $error")
-//
-//                }
-//            })
-//
-//            val thread2 = Thread (){
-//                while (true){
-//                    Thread.sleep(1000L)
-//                    val stackTrace = Looper.getMainLooper().thread.stackTrace
-//                }
-//            }
-//            thread2.name ="sampleThread2"
-//            thread2.start()
+        binding.btnSuspendTimeoutCase2.setOnClickListener {
+            SuspendTimeoutFixer.preventThreadSuspendTimeoutFatalLog(false,this)
+            //保证该线程不出现suspend Timeout
+            SuspendTimeoutFixer.addThread(targetThread)
+
+            if (Build.VERSION.SDK_INT<31){//模拟Timeout
+                Thread {
+                    SuspendTimeoutTest.callNativeThreadSuspendTimeout(Thread.currentThread(),ArtThread.getNativePeer(Thread.currentThread()));
+                }.start()
+            }
         }
 
         binding.btnTestGetThreadCpuTime.setOnClickListener {
             val nativePeer = ArtThread.getNativePeer(Looper.getMainLooper().thread)
             val mainThreadCpuMicroTime = ArtThread.getCpuMicroTime(nativePeer)
-            Log.d("zxw","主线程CpuMicroTime "+mainThreadCpuMicroTime)
+            showMsg("time :$mainThreadCpuMicroTime")
+
         }
 
-        binding.btnSuspendTimeoutCase.setOnClickListener {
-            Sliver.preventThreadSuspendTimeoutFatalLog(object : FixSuspendThreadTimeoutCallback {
-                override fun triggerSuspendTimeout() {
-                    Log.e("sliver","系统触发了timeout")
-                    Handler(Looper.getMainLooper()).post {
-                        Toast.makeText(this@SliverTestActivity,"系统触发了timeout",Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                override fun onError(error: String?) {
-                    Toast.makeText(this@SliverTestActivity,"error "+error,Toast.LENGTH_SHORT).show()
-                }
-            })
-            Thread {
-                SuspendTimeoutTest.callNativeThreadSuspendTimeout(Thread.currentThread(),ArtThread.getNativePeer(Thread.currentThread()));
-            }.start()
-        }
 
 
         binding.btnSuspendMainThread.setOnClickListener {
@@ -129,6 +112,34 @@ class SliverTestActivity : AppCompatActivity() {
             }.start()
 
         }
+
+    }
+
+
+    fun showMsg(msg:String){
+        if (Thread.currentThread().id == Looper.getMainLooper().thread.id){
+            Toast.makeText(this,msg,Toast.LENGTH_SHORT).show()
+        } else{
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(this,msg,Toast.LENGTH_SHORT).show()
+            }
+        }
+        Log.e("sliver",msg)
+    }
+    override fun triggerSuspendTimeout() {
+        showMsg("触发SuspendTimeout 被拦截")
+    }
+
+    override fun onError(error: String?) {
+        showMsg("Hook失败 $error")
+    }
+
+    override fun hookSuspendThreadByIdSuccess() {
+        showMsg("hookSuspendThreadByIdSuccess 成功");
+    }
+
+    override fun hookSuspendThreadByPeerWarningSuccess() {
+        showMsg("hookSuspendThreadByPeerWarningSuccess 成功");
 
     }
 }

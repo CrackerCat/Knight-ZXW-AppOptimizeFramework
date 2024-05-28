@@ -88,6 +88,7 @@ class Thread {
   } tls32_android11;
 
  public:
+
 // Guaranteed to be non-zero.
   /**
    * 获取 thin_lock_thread_id threadId
@@ -103,6 +104,7 @@ class Thread {
 
   uint64_t GetCpuMicroTime();
 
+  static void init();
   static Thread *Current();
 };
 

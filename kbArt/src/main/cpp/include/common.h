@@ -19,7 +19,6 @@ const char *const kApexArtNsLibDir = "/apex/com.android.art/lib/";
 
 
 
-
 static inline int32_t getAndroidApiLevel() {
   static int api_level = -1;
   if (api_level < 0) {

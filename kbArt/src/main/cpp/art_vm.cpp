@@ -7,6 +7,10 @@
 #include "common.h"
 #include "logger.h"
 #include "kbart_jni.h"
+#include "art_def.h"
+namespace art {
+int apiLevel = 0;
+}
 namespace kbArt {
 JavaVM *gJavaVM = NULL;
 JNIEnv *getJNIEnv() {
@@ -17,6 +21,7 @@ JNIEnv *getJNIEnv() {
 }
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   kbArt::gJavaVM = vm;
+  art::apiLevel = android_get_device_api_level();
   JNIEnv *env = nullptr;
   if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) {
     return -1;

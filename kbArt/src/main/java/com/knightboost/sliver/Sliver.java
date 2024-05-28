@@ -3,6 +3,7 @@ package com.knightboost.sliver;
 
 import com.bytedance.shadowhook.ShadowHook;
 import com.knightboost.artvm.KbArt;
+import com.knightboost.optimize.FixSuspendThreadTimeoutCallback;
 
 public class Sliver {
     static {
@@ -21,32 +22,6 @@ public class Sliver {
     public static native long[] nativeGetMethodStackTrace(long nativePeer);
 
     public static native String[] prettyMethods(long[] frames);
-
-    /**
-     * 防止 suspend thread timeout 调用 ThreadSuspendingPeerWarning时 日志级别为Fatal导致的进程崩溃
-     * Hook成功后会有一些影响
-     *    1. 对于Java层Thread.getStackTrace的调用，原本是会直接崩溃，被Hook后，函数调用会返回 空数组
-     *    2. 对于setThreadName的调用，等于没设置成功
-     * 因此如果最终要防止程序崩溃，业务层还需要针对频繁调用的地方进行单独处理
-     * @param callback
-     */
-    public static native void preventThreadSuspendTimeoutFatalLog(
-            FixSuspendThreadTimeoutCallback callback);
-
-    /**
-     * 将目标线程 调用suspendThreadByPeer函数调用 替换成 byId调用
-     * @param targetThread
-     * @return
-     */
-    public  static native void replaceThreadByPeerToById(Thread targetThread,
-                                                         FixSuspendThreadTimeoutCallback callback);
-
-    /**
-     * 将所有线程的suspendThreadByPeer函数调用 替换成 byId调用
-     * @param callback
-     */
-    public  static native void replaceThreadByPeerToByIdAll(
-            FixSuspendThreadTimeoutCallback callback);
 
 
 }

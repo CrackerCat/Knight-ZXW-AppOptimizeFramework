@@ -7,7 +7,7 @@
 #include "stdint.h"
 #include "string"
 namespace art {
-
+extern int apiLevel;
 #define ANDROID_ICE_CREAM_SANDWICH      14
 #define ANDROID_ICE_CREAM_SANDWICH_MR1  15
 #define ANDROID_JELLY_BEAN              16
