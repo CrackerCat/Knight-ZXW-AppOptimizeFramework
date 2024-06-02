@@ -248,7 +248,12 @@ Java_com_knightboost_optimize_SuspendTimeoutFixer_preventThreadSuspendTimeoutFat
       proxySuspendThreadByPeerStub = shadowhook_hook_sym_name("libart.so", SYMBOL_THREAD_SUSPEND_BY_PEER_API_31,
                                                               (void *) proxySuspendThreadByPeer31,
                                                               &originalSuspendThreadByPeer);
-
+      //如果没找到，尝试用 32的符号进行查找
+      if (proxySuspendThreadByPeerStub == nullptr){
+        proxySuspendThreadByPeerStub = shadowhook_hook_sym_name("libart.so", SYMBOL_THREAD_SUSPEND_BY_PEER_API_32_34,
+                                                                (void *) proxySuspendThreadByPeer32_34,
+                                                                &originalSuspendThreadByPeer);
+      }
     }else{
       proxySuspendThreadByPeerStub = shadowhook_hook_sym_name("libart.so", SYMBOL_THREAD_SUSPEND_BY_PEER_API_32_34,
                                                               (void *) proxySuspendThreadByPeer32_34,

@@ -37,6 +37,16 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        release {
+            storeFile file('sign-key')  // 指定存储签名所需的密钥库文件路径
+            storePassword '123456' // 密钥库密码
+            keyAlias 'key0' // 密钥别名
+            keyPassword '123456' // 密钥密码
+        }
+        // 如果需要设置其他的构建类型下的签名配置，可以在这里添加
+    }
+
     buildTypes {
         debug {
             debuggable = true
@@ -44,6 +54,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         release {
+            signingConfig signingConfigs.release
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
