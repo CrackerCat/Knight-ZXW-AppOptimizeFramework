@@ -36,7 +36,7 @@ class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback 
         setContentView(binding.main)
         val targetThread = Thread {
             while (true) {
-                Thread.sleep(50)
+                Thread.sleep(1000)
                 val stackTrace = Looper.getMainLooper().thread.stackTrace
             }
         }
@@ -63,6 +63,9 @@ class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback 
                     SuspendTimeoutTest.callNativeThreadSuspendTimeout(Thread.currentThread(),ArtThread.getNativePeer(Thread.currentThread()));
                 }.start()
             }
+
+//           val result =  SuspendTimeoutFixer.findSymbolTest();
+//            showMsg("查找符号结果 $result")
         }
 
         binding.btnRemoveProtectedThread.setOnClickListener {

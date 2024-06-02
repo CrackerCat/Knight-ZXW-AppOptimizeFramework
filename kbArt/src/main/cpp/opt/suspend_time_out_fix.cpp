@@ -23,7 +23,10 @@ using namespace art;
 #define SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_6_7 "_ZN3artL26ThreadSuspendByPeerWarningEPNS_6ThreadENS_11LogSeverityEPKcP8_jobject"
 #define SYMBOL_THREAD_SUSPEND_BY_PEER_WARNING_5 "_ZN3artL26ThreadSuspendByPeerWarningEPNS_6ThreadEiPKcP8_jobject"
 
-#define SYMBOL_THREAD_SUSPEND_BY_PEER_API_31_34 "_ZN3art10ThreadList19SuspendThreadByPeerEP8_jobjectNS_13SuspendReasonEPb"
+
+#define SYMBOL_THREAD_SUSPEND_BY_PEER_API_31 "_ZN3art10ThreadList19SuspendThreadByPeerEP8_jobjectbNS_13SuspendReasonEPb"
+
+#define SYMBOL_THREAD_SUSPEND_BY_PEER_API_32_34 "_ZN3art10ThreadList19SuspendThreadByPeerEP8_jobjectNS_13SuspendReasonEPb"
 
 //8.1~14
 #define SYMBOL_THREAD_SUSPEND_BY_THREAD_ID_API_26_34 "_ZN3art10ThreadList23SuspendThreadByThreadIdEjNS_13SuspendReasonEPb"
@@ -71,7 +74,12 @@ const char *getThreadSuspendByPeerSymbol() {
 //  if (apiLevel <= 34 && apiLevel >= 32) { //12.1~14
 //    return SYMBOL_THREAD_SUSPEND_BY_PEER_API_32_34;
 //  }
-  return SYMBOL_THREAD_SUSPEND_BY_PEER_API_31_34;
+  // 31和32 其实不一样
+  if (apiLevel >=32 && apiLevel<=34){
+    return SYMBOL_THREAD_SUSPEND_BY_PEER_API_32_34;
+  } else {
+    return SYMBOL_THREAD_SUSPEND_BY_PEER_API_31;
+  }
 }
 
 const char *getThreadSuspendThreadByThreadIdSymbol() {
@@ -120,18 +128,53 @@ void proxyThreadSuspendTimeoutWarning(void *self, LogSeverity severity, const ch
     }
   }
 }
-
-void *proxySuspendThreadByPeer(void *thread_list,
+void *proxySuspendThreadByPeer31(void *thread_list,
                                jobject peer,
+                                 bool request_suspension,
                                SuspendReason suspendReason,
-                               bool *timed_out) {
+                               bool *timed_out){
   SHADOWHOOK_STACK_SCOPE();
   //调用原函数
   if (replaceSuspendMethodForAll){
     //直接替换
     jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
     uint32_t targetThreadId = ((Thread *) nativePeer)->GetThreadId();
-//    LOGT("sliver", "替换线程  suspendThreadByThreadId,目标线程threadId为 %d", targetThreadId);
+    return thread_suspend_by_thread_id(thread_list, targetThreadId, suspendReason, timed_out);
+  } else {
+    uint32_t currentThreadId = Thread::Current()->GetThreadId();
+    std::shared_lock<std::shared_mutex> lock(idVectorMutext);
+    if (protectedThreadIdSet.find(currentThreadId) != protectedThreadIdSet.end()){
+      lock.unlock();
+      jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
+      uint32_t targetThreadId = ((Thread *) nativePeer)->GetThreadId();
+//    LOGT("sliver", "替换线程  suspendThreadByThreadId,函数指针为 %p ,thread_list 为%p, 目标线程threadId为 %d, ",
+//         thread_suspend_by_thread_id,
+//         thread_list,
+//         targetThreadId);
+      return thread_suspend_by_thread_id(thread_list, targetThreadId, suspendReason, timed_out);
+    } else{
+      lock.unlock();
+      //调用原函数
+      void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer31, thread_list, peer,request_suspension, suspendReason, timed_out);
+      return thread;
+    }
+  }
+}
+
+void *proxySuspendThreadByPeer32_34(void *thread_list,
+                                 jobject peer,
+                                 SuspendReason suspendReason,
+                                 bool *timed_out){
+  SHADOWHOOK_STACK_SCOPE();
+  //调用原函数
+  if (replaceSuspendMethodForAll){
+    //直接替换
+    jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
+    uint32_t targetThreadId = ((Thread *) nativePeer)->GetThreadId();
+//    LOGT("sliver", "替换线程  suspendThreadByThreadId,函数指针为 %p ,thread_list 为%p, 目标线程threadId为 %d, ",
+//         thread_suspend_by_thread_id,
+//         thread_list,
+//         targetThreadId);
     return thread_suspend_by_thread_id(thread_list, targetThreadId, suspendReason, timed_out);
   } else {
     uint32_t currentThreadId = Thread::Current()->GetThreadId();
@@ -146,14 +189,13 @@ void *proxySuspendThreadByPeer(void *thread_list,
     } else{
       lock.unlock();
       //调用原函数
-      void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer, thread_list, peer, suspendReason, timed_out);
+      void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer32_34, thread_list, peer, suspendReason, timed_out);
       return thread;
     }
-
   }
-
-
 }
+
+
 
 
 
@@ -164,6 +206,7 @@ Java_com_knightboost_optimize_SuspendTimeoutFixer_preventThreadSuspendTimeoutFat
                                                                                       jobject thiz,
                                                                                       jboolean replace_suspend_by_peer_to_thread_id_for_all_thread,
                                                                                       jobject callback) {
+
   // 处理钩子设置失败的情况
   jclass jThreadHookClass = env->FindClass(
       "com/knightboost/optimize/FixSuspendThreadTimeoutCallback");
@@ -201,13 +244,22 @@ Java_com_knightboost_optimize_SuspendTimeoutFixer_preventThreadSuspendTimeoutFat
       return;
     }
 
-    proxySuspendThreadByPeerStub = shadowhook_hook_sym_name("libart.so", getThreadSuspendByPeerSymbol(),
-                                                            (void *) proxySuspendThreadByPeer,
-                                                            &originalSuspendThreadByPeer);
+    if (apiLevel == 31) {
+      proxySuspendThreadByPeerStub = shadowhook_hook_sym_name("libart.so", SYMBOL_THREAD_SUSPEND_BY_PEER_API_31,
+                                                              (void *) proxySuspendThreadByPeer31,
+                                                              &originalSuspendThreadByPeer);
+
+    }else{
+      proxySuspendThreadByPeerStub = shadowhook_hook_sym_name("libart.so", SYMBOL_THREAD_SUSPEND_BY_PEER_API_32_34,
+                                                              (void *) proxySuspendThreadByPeer32_34,
+                                                              &originalSuspendThreadByPeer);
+    }
+
     if (proxySuspendThreadByPeerStub == nullptr) {
       const int err_num = shadowhook_get_errno();
       const char *errMsg = shadowhook_to_errmsg(err_num);
       env->CallVoidMethod(callback, onErrorMethodId, env->NewStringUTF(errMsg));
+      return;
     } else {
       //Hook成功
       jmethodID jMethodId = env->GetMethodID(jThreadHookClass, "hookSuspendThreadByIdSuccess",
@@ -215,7 +267,7 @@ Java_com_knightboost_optimize_SuspendTimeoutFixer_preventThreadSuspendTimeoutFat
       if (jMethodId != nullptr) {
         env->CallVoidMethod(callback, jMethodId);
       }
-
+      return;
     }
   } else {
     //31以下替换 suspendThreadByPeerWarning日志级别的方式
@@ -247,7 +299,6 @@ Java_com_knightboost_optimize_SuspendTimeoutFixer_preventThreadSuspendTimeoutFat
       jmethodID hookSuspendThreadByPeerWarningSuccessMethodId = env->GetMethodID(jThreadHookClass,
                                                                                  "hookSuspendThreadByPeerWarningSuccess", "()V");
       env->CallVoidMethod(callback, hookSuspendThreadByPeerWarningSuccessMethodId);
-
     }
   }
 }
