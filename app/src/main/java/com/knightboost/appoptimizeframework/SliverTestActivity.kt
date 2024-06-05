@@ -2,10 +2,7 @@ package com.knightboost.appoptimizeframework
 
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.util.Log
 import android.view.LayoutInflater
 import android.widget.Toast
@@ -16,7 +13,8 @@ import com.knightboost.optimize.FixSuspendThreadTimeoutCallback
 import com.knightboost.optimize.SuspendTimeoutFixer
 import com.knightboost.sliver.Sliver
 import com.knightboost.test.SuspendTimeoutTest
-import kotlin.text.StringBuilder
+import java.text.SimpleDateFormat
+import java.util.Date
 
 class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback {
 
@@ -28,19 +26,19 @@ class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback 
 
     val mainThreadTid = ArtThread.getThreadId(ArtThread.getNativePeer(Looper.getMainLooper().thread));
 
+    var targetThread:Thread? =null
     lateinit var binding: ActivitySliverTestBinding;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        setContentView(R.layout.activity_sliver_test)
         binding = ActivitySliverTestBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.main)
-        val targetThread = Thread {
-            while (true) {
-                Thread.sleep(1000)
-                val stackTrace = Looper.getMainLooper().thread.stackTrace
-            }
-        }
-        targetThread.start()
+
+        threadLiveAndDeath()
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        val currentDateandTime: String = sdf.format(Date())
+        binding.startTime.setText("启动时间 "+currentDateandTime)
+
 
         binding.btnThreadStacktraceTest.setOnClickListener {
             Thread {
@@ -56,6 +54,12 @@ class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback 
             }.start()
         }
 
+        binding.btnRemoveProtectedThread.setOnClickListener {
+            targetThread?.let {
+                SuspendTimeoutFixer.removeThread(it)
+            }
+        }
+
         binding.btnSuspendTimeoutCase.setOnClickListener {
             SuspendTimeoutFixer.preventThreadSuspendTimeoutFatalLog(true,this)
             if (Build.VERSION.SDK_INT<31){//模拟Timeout
@@ -64,17 +68,18 @@ class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback 
                 }.start()
             }
 
-//           val result =  SuspendTimeoutFixer.findSymbolTest();
-//            showMsg("查找符号结果 $result")
-        }
-
-        binding.btnRemoveProtectedThread.setOnClickListener {
-            SuspendTimeoutFixer.removeThread(targetThread)
         }
 
         binding.btnSuspendTimeoutCase2.setOnClickListener {
             SuspendTimeoutFixer.preventThreadSuspendTimeoutFatalLog(false,this)
             //保证该线程不出现suspend Timeout
+            val targetThread = Thread {
+                while (true) {
+                    Thread.sleep(5)
+                    val stackTrace = Looper.getMainLooper().thread.stackTrace
+                }
+            }
+            targetThread.start()
             SuspendTimeoutFixer.addThread(targetThread)
 
             if (Build.VERSION.SDK_INT<31){//模拟Timeout
@@ -118,6 +123,24 @@ class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback 
 
     }
 
+    private fun threadLiveAndDeath() {
+        Thread {
+            while (true) {
+                Thread.sleep(5)
+                Thread.getAllStackTraces()
+            }
+        }.start()
+
+        Thread {
+            while (true) {
+                //模拟不断创建线程和死亡的操作
+                Thread.sleep(5L)
+                Thread {
+                    Thread.sleep(3L)
+                }.start()
+            }
+        }.start()
+    }
 
     fun showMsg(msg:String){
         if (Thread.currentThread().id == Looper.getMainLooper().thread.id){

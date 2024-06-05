@@ -16,7 +16,7 @@ uint32_t art::Thread::GetThreadId() {
     } else if (api_level >= __ANDROID_API_L__) { // >=5.0 and <=Android 10
       offset = offsetof(tls_32bit_sized_values_android_5_11, thin_lock_thread_id);
     } else {  //5.0以下未支持
-      //TODO 未兼容
+      //TODO 暂未兼容
     }
   }
   return *(uint32_t *) ((char *) this + offset);
