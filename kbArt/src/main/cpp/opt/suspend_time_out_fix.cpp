@@ -138,7 +138,18 @@ void *proxySuspendThreadByPeer31(void *thread_list,
   if (replaceSuspendMethodForAll){
     //直接替换
     jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
+    //如果线程已死亡，则获取的nativePeer会为 0
+    if (nativePeer == 0L){
+      void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer31, thread_list, peer,request_suspension, suspendReason, timed_out);
+      return thread;
+    }
+    //如果Thread对象内存已被销毁，则会返回 0
     uint32_t targetThreadId = ((Thread *) nativePeer)->GetThreadId();
+//    LOGT("sliver","目标线程ID为 %d",targetThreadId);
+    if (targetThreadId == 0){
+      void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer31, thread_list, peer,request_suspension, suspendReason, timed_out);
+      return thread;
+    }
     return thread_suspend_by_thread_id(thread_list, targetThreadId, suspendReason, timed_out);
   } else {
     uint32_t currentThreadId = Thread::Current()->GetThreadId();
@@ -146,11 +157,17 @@ void *proxySuspendThreadByPeer31(void *thread_list,
     if (protectedThreadIdSet.find(currentThreadId) != protectedThreadIdSet.end()){
       lock.unlock();
       jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
+      //如果线程已死亡，则获取的nativePeer会为0
+      if (nativePeer == 0L){
+        void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer31, thread_list, peer, request_suspension,suspendReason, timed_out);
+        return thread;
+      }
+
       uint32_t targetThreadId = ((Thread *) nativePeer)->GetThreadId();
-//    LOGT("sliver", "替换线程  suspendThreadByThreadId,函数指针为 %p ,thread_list 为%p, 目标线程threadId为 %d, ",
-//         thread_suspend_by_thread_id,
-//         thread_list,
-//         targetThreadId);
+      if (targetThreadId == 0){
+        void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer31, thread_list, peer,request_suspension, suspendReason, timed_out);
+        return thread;
+      }
       return thread_suspend_by_thread_id(thread_list, targetThreadId, suspendReason, timed_out);
     } else{
       lock.unlock();
