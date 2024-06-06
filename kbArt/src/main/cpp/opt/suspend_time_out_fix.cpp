@@ -274,6 +274,8 @@ Java_com_knightboost_optimize_SuspendTimeoutFixer_preventThreadSuspendTimeoutFat
     thread_suspend_by_thread_id = (ThreadSuspendByThreadId) shadowhook_dlsym(handle, getThreadSuspendThreadByThreadIdSymbol());
     shadowhook_dlclose(handle);
     if (thread_suspend_by_thread_id == nullptr) {
+      __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "hookSuspendThreadByIdFailed, symbol %s not found",getThreadSuspendThreadByThreadIdSymbol());
+
       env->CallVoidMethod(callback, onErrorMethodId, env->NewStringUTF("thread_suspend_by_thread_id 符号未找到"));
       return;
     }
@@ -297,10 +299,13 @@ Java_com_knightboost_optimize_SuspendTimeoutFixer_preventThreadSuspendTimeoutFat
     if (proxySuspendThreadByPeerStub == nullptr) {
       const int err_num = shadowhook_get_errno();
       const char *errMsg = shadowhook_to_errmsg(err_num);
+      __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "hookSuspendThreadByIdFailed: %s",errMsg);
       env->CallVoidMethod(callback, onErrorMethodId, env->NewStringUTF(errMsg));
       return;
     } else {
       //Hook成功
+      __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "hookSuspendThreadByIdSuccess");
+
       jmethodID jMethodId = env->GetMethodID(jThreadHookClass, "hookSuspendThreadByIdSuccess",
                                              "()V");
       if (jMethodId != nullptr) {

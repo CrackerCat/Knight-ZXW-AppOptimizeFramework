@@ -41,6 +41,13 @@
         android:text="获取调用栈防止suspendTimeOut(target)"
         />
     <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_gc_mock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="模拟不断申请内存，从而触发Gc"
+        />
+
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_remove_protected_thread"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

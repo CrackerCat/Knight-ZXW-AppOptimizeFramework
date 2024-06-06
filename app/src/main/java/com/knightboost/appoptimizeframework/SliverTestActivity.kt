@@ -15,6 +15,7 @@ import com.knightboost.sliver.Sliver
 import com.knightboost.test.SuspendTimeoutTest
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Random
 
 class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback {
 
@@ -97,6 +98,9 @@ class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback 
         }
 
 
+        binding.btnGcMock.setOnClickListener {
+            GcCase()
+        }
 
         binding.btnSuspendMainThread.setOnClickListener {
             Thread {
@@ -136,7 +140,9 @@ class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback 
                 //模拟不断创建线程和死亡的操作
                 Thread.sleep(5L)
                 Thread {
-                    Thread.sleep(3L)
+                    //模拟存活不同时间
+                    val time = kotlin.random.Random.nextInt(0, 50)
+                    Thread.sleep(time.toLong())
                 }.start()
             }
         }.start()
@@ -168,4 +174,21 @@ class SliverTestActivity : AppCompatActivity(), FixSuspendThreadTimeoutCallback 
         showMsg("hookSuspendThreadByPeerWarningSuccess 成功");
 
     }
+
+     fun GcCase(){
+         Thread{
+             while (true) {
+                 for (i in 0..99) {
+                     val size = kotlin.random.Random.nextInt(0, 1024)
+                     val memory = ByteArray(1024 * size) // 申请 0~1MB内存
+                     println("Allocated ${memory.size/1024f} Kb memory")
+                 }
+                 try {
+                     Thread.sleep(500) // 模拟停顿一段时间
+                 } catch (e: InterruptedException) {
+                     e.printStackTrace()
+                 }
+             }
+         }.start()
+     }
 }
