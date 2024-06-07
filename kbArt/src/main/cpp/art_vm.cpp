@@ -13,11 +13,19 @@ int apiLevel = 0;
 }
 namespace kbArt {
 JavaVM *gJavaVM = NULL;
-JNIEnv *getJNIEnv() {
-  JNIEnv *env;
-  kbArt::gJavaVM->AttachCurrentThread(&env, NULL); // 附加当前线程的JNIEnv
-  return env;
+bool getJNIEnv(JNIEnv** env) {
+  if (kbArt::gJavaVM->GetEnv((void **)env,JNI_VERSION_1_6) <0 ){
+    kbArt::gJavaVM->AttachCurrentThread(env, nullptr);
+    return true;
+  }
+  return false;
 }
+
+jint detachCurrentThread(){
+  return kbArt::gJavaVM->DetachCurrentThread();
+}
+
+
 }
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   kbArt::gJavaVM = vm;

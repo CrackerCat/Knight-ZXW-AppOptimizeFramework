@@ -40,6 +40,7 @@ add_library( # Sets the name of the library.
         ${STACK_SRC}
         ${SRC_DIR_Sliver}
         ${SRC_OPT}
+        src/main/cpp/common/bytesig.c
         # Provides a relative path to your source file(s).
         src/main/cpp/art_vm.cpp
         src/main/cpp/art_thread_jni.cpp
@@ -47,6 +48,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/test.cpp
         src/main/cpp/opt/android_14_debuggable_bug_fixer.cpp
         src/main/cpp/opt/suspend_time_out_fix.cpp
+
         )
 
 target_include_directories(kbArt PUBLIC

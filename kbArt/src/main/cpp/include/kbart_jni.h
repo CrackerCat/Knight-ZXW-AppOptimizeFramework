@@ -8,6 +8,7 @@ namespace kbArt {
 extern JavaVM *gJavaVM; // 全局变量用于保存JavaVM指针
 
 
-JNIEnv *getJNIEnv();
+bool getJNIEnv(JNIEnv** env);
+jint detachCurrentThread();
 }
 #endif

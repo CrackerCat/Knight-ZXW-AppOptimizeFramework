@@ -13,6 +13,7 @@
 #include <mutex>
 #include "shared_mutex"
 #include "art_def.h"
+#include "bytesig.h"
 namespace kbArt {
 using namespace art;
 #define TARGET_ART_LIB "libart.so"
@@ -54,6 +55,16 @@ static jfieldID nativePeerFieldId = nullptr;
 void *originalSuspendThreadByPeer = nullptr; // 指向原始函数的指针
 void *proxySuspendThreadByPeerStub = nullptr;
 
+jlong GetThreadNativePeer(jobject peer) {
+  JNIEnv *jni_env = NULL;
+  bool isAttached = getJNIEnv(&jni_env);
+  jlong nativePeer = jni_env->GetLongField(peer, nativePeerFieldId);
+  if (isAttached){
+    detachCurrentThread();
+  }
+  return nativePeer;
+}
+
 const char *getThreadSuspendByPeerWarningFunctionName() {
   // Simplified logic based on Android API levels
   if (apiLevel < 23) {
@@ -93,7 +104,8 @@ const char *getThreadSuspendThreadByThreadIdSymbol() {
 //通知Java层观察者，出现suspendTimeout异常
 void triggerSuspendTimeout() {
   // 触发挂起超时处理
-  JNIEnv *pEnv = getJNIEnv();
+  JNIEnv *pEnv = NULL;
+  bool isAttached = getJNIEnv(&pEnv);
   if (pEnv == nullptr) {
     return;
   }
@@ -105,6 +117,9 @@ void triggerSuspendTimeout() {
     if (jMethodId != nullptr) {
       pEnv->CallVoidMethod(javaCallbackObject, jMethodId);
     }
+  }
+  if (isAttached){
+    detachCurrentThread();
   }
 }
 
@@ -137,13 +152,12 @@ void *proxySuspendThreadByPeer31(void *thread_list,
   //调用原函数
   if (replaceSuspendMethodForAll){
     //直接替换
-    jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
+    jlong nativePeer = GetThreadNativePeer(peer);
     //如果线程已死亡，则获取的nativePeer会为 0
     if (nativePeer == 0L){
       void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer31, thread_list, peer,request_suspension, suspendReason, timed_out);
       return thread;
     }
-    //如果Thread对象内存已被销毁，则会返回 0
     uint32_t targetThreadId = ((Thread *) nativePeer)->GetThreadId();
 //    LOGT("sliver","目标线程ID为 %d",targetThreadId);
     if (targetThreadId == 0){
@@ -156,13 +170,18 @@ void *proxySuspendThreadByPeer31(void *thread_list,
     std::shared_lock<std::shared_mutex> lock(idVectorMutext);
     if (protectedThreadIdSet.find(currentThreadId) != protectedThreadIdSet.end()){
       lock.unlock();
-      jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
+      JNIEnv *jni_env = NULL;
+      bool isAttached = getJNIEnv(&jni_env);
+      jlong nativePeer = jni_env->GetLongField(peer, nativePeerFieldId);
+      if (isAttached){
+        detachCurrentThread();
+      }
+
       //如果线程已死亡，则获取的nativePeer会为0
       if (nativePeer == 0L){
         void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer31, thread_list, peer, request_suspension,suspendReason, timed_out);
         return thread;
       }
-
       uint32_t targetThreadId = ((Thread *) nativePeer)->GetThreadId();
       if (targetThreadId == 0){
         void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer31, thread_list, peer,request_suspension, suspendReason, timed_out);
@@ -179,14 +198,14 @@ void *proxySuspendThreadByPeer31(void *thread_list,
 }
 
 void *proxySuspendThreadByPeer32_34(void *thread_list,
-                                 jobject peer,
-                                 SuspendReason suspendReason,
-                                 bool *timed_out){
+                                    jobject peer,
+                                    SuspendReason suspendReason,
+                                    bool *timed_out){
   SHADOWHOOK_STACK_SCOPE();
   //调用原函数
   if (replaceSuspendMethodForAll){
     //直接替换
-    jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
+    jlong nativePeer = GetThreadNativePeer(peer);
     //如果线程已死亡，则获取的nativePeer会为 0
     if (nativePeer == 0L){
       void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer32_34, thread_list, peer, suspendReason, timed_out);
@@ -206,7 +225,7 @@ void *proxySuspendThreadByPeer32_34(void *thread_list,
     std::shared_lock<std::shared_mutex> lock(idVectorMutext);
     if (protectedThreadIdSet.find(currentThreadId) != protectedThreadIdSet.end()){
       lock.unlock();
-      jlong nativePeer = getJNIEnv()->GetLongField(peer, nativePeerFieldId);
+      jlong nativePeer = GetThreadNativePeer(peer);
       //如果线程已死亡，则获取的nativePeer会为0
       if (nativePeer == 0L){
         void *thread = SHADOWHOOK_CALL_PREV(proxySuspendThreadByPeer32_34, thread_list, peer, suspendReason, timed_out);
@@ -228,9 +247,6 @@ void *proxySuspendThreadByPeer32_34(void *thread_list,
     }
   }
 }
-
-
-
 
 
 using namespace kbArt;
