@@ -129,7 +129,8 @@ void proxyThreadSuspendTimeoutWarning(void *self, LogSeverity severity, const ch
 
     // 如果当前是 FATAL 并且 message 是 Thread suspend timeout 则不调用原始函数,直接返回
     __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Fatal threadSuspendTimeout catch success : %s", message);
-    triggerSuspendTimeout();
+    //验证线上崩溃是不是此处导致的
+//    triggerSuspendTimeout();
     //测试验证
     //该行日志 验证 是不是回调Java层打印日志导致的崩溃问题
     __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "triggerSuspendTimeout callback success");
